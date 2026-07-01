@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Defensoras de las Tablas 🐾</title>
+<style>
+  :root {
+    --bg: #7ec850;
+    --panel: #fffdf5;
+    --ink: #4a3728;
+    --accent: #ff8a3d;
+    --accent2: #57b8ff;
+    --good: #5cc46a;
+    --bad: #e8635a;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', 'Segoe UI', sans-serif;
+    background: linear-gradient(180deg, #aee4ff 0%, #d3f2c2 100%);
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+  .screen { display: none; min-height: 100vh; padding: 16px; max-width: 980px; margin: 0 auto; }
+  .screen.active { display: block; }
+  h1 { text-align: center; font-size: clamp(1.6rem, 5vw, 2.6rem); margin: 8px 0 4px; text-shadow: 2px 2px 0 #ffffffaa; }
+  h2 { text-align: center; font-size: clamp(1.2rem, 4vw, 1.8rem); margin: 6px 0; }
+  .subtitle { text-align: center; margin: 0 0 18px; font-size: 1.05rem; opacity: .8; }
+
+  .btn {
+    font-family: inherit; font-size: 1.1rem; font-weight: bold; color: #fff;
+    background: var(--accent); border: none; border-radius: 16px;
+    padding: 12px 22px; cursor: pointer; box-shadow: 0 4px 0 #c96a26;
+    transition: transform .08s;
+  }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #c96a26; }
+  .btn.blue { background: var(--accent2); box-shadow: 0 4px 0 #3a87c4; }
+  .btn.blue:active { box-shadow: 0 1px 0 #3a87c4; }
+  .btn.small { font-size: .95rem; padding: 8px 14px; border-radius: 12px; }
+  .btn:disabled { background: #b9b3a8; box-shadow: 0 4px 0 #8f8a80; cursor: default; }
+
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+
+  /* ---- Perfiles ---- */
+  .profile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-top: 18px; }
+  .profile-card {
+    background: var(--panel); border: 3px solid #e8ddc8; border-radius: 20px;
+    padding: 16px 10px; text-align: center; cursor: pointer; position: relative;
+    transition: transform .1s; box-shadow: 0 4px 10px #0001;
+  }
+  .profile-card:hover { transform: scale(1.04); border-color: var(--accent); }
+  .profile-card .avatar { font-size: 3rem; }
+  .profile-card .name { font-weight: bold; font-size: 1.15rem; margin-top: 4px; word-break: break-word; }
+  .profile-card .meta { font-size: .9rem; opacity: .75; margin-top: 2px; }
+  .profile-card.new { border-style: dashed; display: flex; flex-direction: column; justify-content: center; min-height: 140px; color: #9a8f7d; }
+  .profile-card .del { position: absolute; top: 6px; right: 8px; border: none; background: none; font-size: 1rem; cursor: pointer; opacity: .4; }
+  .profile-card .del:hover { opacity: 1; }
+
+  .avatar-picker { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0; }
+  .avatar-picker button {
+    font-size: 2rem; background: var(--panel); border: 3px solid #e8ddc8; border-radius: 14px;
+    width: 58px; height: 58px; cursor: pointer;
+  }
+  .avatar-picker button.sel { border-color: var(--accent); background: #fff1e3; transform: scale(1.1); }
+  #new-profile-form { display: none; background: var(--panel); border-radius: 20px; padding: 18px; margin-top: 16px; box-shadow: 0 4px 10px #0001; }
+  #new-profile-form input {
+    font-family: inherit; font-size: 1.2rem; padding: 10px 14px; border-radius: 12px;
+    border: 3px solid #e8ddc8; width: 100%; max-width: 320px; display: block; margin: 0 auto; text-align: center;
+  }
+  .form-actions { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }
+
+  /* ---- Mapa de mundos ---- */
+  .world-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+  .world-card {
+    background: var(--panel); border-radius: 20px; padding: 14px; text-align: center;
+    box-shadow: 0 4px 10px #0001; border: 3px solid #e8ddc8; position: relative;
+  }
+  .world-card.locked { filter: grayscale(1); opacity: .55; }
+  .world-card .wemoji { font-size: 2.6rem; }
+  .world-card .wname { font-weight: bold; font-size: 1.1rem; }
+  .world-card .wtable { font-size: .95rem; opacity: .75; margin-bottom: 8px; }
+  .level-row { display: flex; gap: 6px; justify-content: center; }
+  .level-btn {
+    font-family: inherit; font-size: 1rem; font-weight: bold; border: none; border-radius: 12px;
+    background: var(--accent2); color: #fff; padding: 8px 0; width: 58px; cursor: pointer;
+    box-shadow: 0 3px 0 #3a87c4; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .level-btn:disabled { background: #b9b3a8; box-shadow: 0 3px 0 #8f8a80; cursor: default; }
+  .level-btn .stars { font-size: .6rem; letter-spacing: -1px; }
+  .lock-badge { position: absolute; top: 10px; right: 12px; font-size: 1.3rem; }
+
+  /* ---- Progreso ---- */
+  .heat-wrap { overflow-x: auto; background: var(--panel); border-radius: 20px; padding: 14px; box-shadow: 0 4px 10px #0001; }
+  table.heat { border-collapse: collapse; margin: 0 auto; }
+  table.heat td, table.heat th { border: 2px solid #fff; text-align: center; font-size: .85rem; padding: 0; }
+  table.heat th { background: #f0e8d8; padding: 6px 8px; }
+  table.heat td { width: 52px; height: 40px; background: #eee9de; color: #7c7365; }
+  td.m0 { background: #eee9de; }         /* sin practicar */
+  td.m1 { background: #f5b8b1; color: #7a2d27; }  /* a practicar */
+  td.m2 { background: #ffe08a; color: #7a5c00; }  /* casi */
+  td.m3 { background: #a8e6a1; color: #1e5c25; }  /* dominada */
+  .legend { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 10px; font-size: .9rem; }
+  .legend span::before { content: '■ '; }
+  .legend .l1::before { color: #f5b8b1; } .legend .l2::before { color: #ffe08a; }
+  .legend .l3::before { color: #a8e6a1; } .legend .l0::before { color: #eee9de; }
+
+  /* ---- Juego ---- */
+  #screen-game { padding: 8px; display: none; flex-direction: column; align-items: center; }
+  #screen-game.active { display: flex; }
+  #hud {
+    width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center;
+    font-size: 1.1rem; font-weight: bold; padding: 4px 6px; gap: 8px; flex-wrap: wrap;
+  }
+  #hud .hud-item { background: #fffdf5cc; border-radius: 12px; padding: 4px 12px; box-shadow: 0 2px 6px #0002; }
+  #canvas-wrap { position: relative; width: 100%; max-width: 900px; }
+  canvas { width: 100%; display: block; border-radius: 18px; box-shadow: 0 6px 16px #0003; }
+
+  #answer-area { width: 100%; max-width: 900px; margin-top: 8px; display: flex; gap: 10px; align-items: stretch; justify-content: center; flex-wrap: wrap; }
+  #answer-display {
+    background: var(--panel); border: 4px solid var(--accent); border-radius: 16px;
+    font-size: 2rem; font-weight: bold; min-width: 150px; padding: 4px 18px;
+    display: flex; align-items: center; justify-content: center; letter-spacing: 3px;
+  }
+  #answer-display.shake { animation: shake .35s; border-color: var(--bad); }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+  #numpad { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; flex: 1; max-width: 460px; min-width: 280px; }
+  #numpad button {
+    font-family: inherit; font-size: 1.35rem; font-weight: bold; border: none; border-radius: 12px;
+    background: var(--panel); color: var(--ink); padding: 10px 0; cursor: pointer;
+    box-shadow: 0 3px 0 #cfc6b2;
+  }
+  #numpad button:active { transform: translateY(2px); box-shadow: 0 1px 0 #cfc6b2; }
+  #numpad button.ok { background: var(--good); color: #fff; box-shadow: 0 3px 0 #3d8c48; grid-column: span 2; }
+  #numpad button.back { background: #f2d0a4; box-shadow: 0 3px 0 #c9a26a; }
+
+  #overlay {
+    position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+    background: #00000055; border-radius: 18px; z-index: 5;
+  }
+  #overlay.show { display: flex; }
+  #overlay .card {
+    background: var(--panel); border-radius: 24px; padding: 26px 30px; text-align: center;
+    max-width: 90%; box-shadow: 0 10px 30px #0005; animation: pop .3s;
+  }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  #overlay .big-emoji { font-size: 3.2rem; }
+  #overlay .stars-line { font-size: 2.2rem; letter-spacing: 4px; margin: 6px 0; }
+  #overlay .actions { display: flex; gap: 10px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: var(--ink); color: #fff; border-radius: 14px; padding: 10px 18px;
+    font-size: 1rem; opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 50;
+  }
+  #toast.show { opacity: .95; }
+</style>
+</head>
+<body>
+
+<!-- ============ PANTALLA: PERFILES ============ -->
+<div id="screen-profiles" class="screen active">
+  <h1>🐾 Defensoras de las Tablas 🐾</h1>
+  <p class="subtitle">¡Alimenta a los animalitos con multiplicaciones y protege el huerto!</p>
+  <h2>¿Quién va a jugar?</h2>
+  <div class="profile-grid" id="profile-grid"></div>
+
+  <div id="new-profile-form">
+    <h2>Crea tu perfil</h2>
+    <input type="text" id="new-name" maxlength="14" placeholder="Tu nombre" autocomplete="off">
+    <p style="text-align:center; margin:14px 0 4px;">Elige tu animalito:</p>
+    <div class="avatar-picker" id="avatar-picker"></div>
+    <div class="form-actions">
+      <button class="btn" id="btn-create">¡Crear! 🎉</button>
+      <button class="btn blue small" id="btn-cancel-create">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PANTALLA: MAPA ============ -->
+<div id="screen-map" class="screen">
+  <div class="topbar">
+    <button class="btn blue small" id="btn-switch-profile">👤 Cambiar perfil</button>
+    <div class="hud-item" id="map-player" style="background:#fffdf5cc; border-radius:12px; padding:6px 14px; font-weight:bold; box-shadow:0 2px 6px #0002;"></div>
+    <button class="btn small" id="btn-progress">📊 Progreso</button>
+  </div>
+  <h1>Mapa de Aventuras</h1>
+  <p class="subtitle">Cada mundo es una tabla. ¡Gana estrellas para desbloquear el siguiente!</p>
+  <div class="world-grid" id="world-grid"></div>
+</div>
+
+<!-- ============ PANTALLA: PROGRESO ============ -->
+<div id="screen-progress" class="screen">
+  <div class="topbar">
+    <button class="btn blue small" id="btn-back-map">⬅ Volver al mapa</button>
+  </div>
+  <h1 id="progress-title">📊 Progreso</h1>
+  <p class="subtitle">Verde = dominada · Amarillo = casi · Rojo = a practicar</p>
+  <div class="heat-wrap" id="heat-wrap"></div>
+  <div class="legend">
+    <span class="l3">Dominada</span><span class="l2">Casi</span>
+    <span class="l1">A practicar</span><span class="l0">Sin practicar</span>
+  </div>
+</div>
+
+<!-- ============ PANTALLA: JUEGO ============ -->
+<div id="screen-game" class="screen">
+  <div id="hud">
+    <span class="hud-item" id="hud-level">🌼</span>
+    <span class="hud-item" id="hud-lives">🥬🥬🥬</span>
+    <span class="hud-item" id="hud-coins">🪙 0</span>
+    <span class="hud-item" id="hud-wave">🐾 0/0</span>
+  </div>
+  <div id="canvas-wrap">
+    <canvas id="canvas"></canvas>
+    <div id="overlay"><div class="card" id="overlay-card"></div></div>
+  </div>
+  <div id="answer-area">
+    <div id="answer-display">&nbsp;</div>
+    <div id="numpad">
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+      <button data-k="0">0</button>
+      <button class="back" data-k="back">⌫</button>
+      <button class="ok" data-k="ok">✔ ¡Lanzar!</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+/* ================== CONFIGURACIÓN DE MUNDOS ================== */
+const WORLDS = [
+  { table: 2,  name: 'La Pradera',  enemy: '🐰', boss: '🐮', deco: '🌼', sky: '#bfe8ff', ground: '#8fd06a' },
+  { table: 3,  name: 'El Bosque',   enemy: '🦊', boss: '🐻', deco: '🍄', sky: '#cde8c0', ground: '#5f9e4f' },
+  { table: 4,  name: 'El Océano',   enemy: '🐬', boss: '🐳', deco: '🐚', sky: '#bde3f7', ground: '#5fb8d9' },
+  { table: 5,  name: 'La Selva',    enemy: '🐵', boss: '🦍', deco: '🌴', sky: '#d7f0b2', ground: '#4c9a42' },
+  { table: 6,  name: 'La Sabana',   enemy: '🦓', boss: '🦁', deco: '🌳', sky: '#ffe9b8', ground: '#d9b45f' },
+  { table: 7,  name: 'El Ártico',   enemy: '🐧', boss: '🐻‍❄️', deco: '⛄', sky: '#dcefff', ground: '#eaf6ff' },
+  { table: 8,  name: 'El Desierto', enemy: '🦎', boss: '🐫', deco: '🌵', sky: '#ffe3c2', ground: '#e8c883' },
+  { table: 9,  name: 'La Montaña',  enemy: '🐐', boss: '🦅', deco: '🏔️', sky: '#d8dff0', ground: '#a3b08c' },
+  { table: 10, name: 'La Granja',   enemy: '🐷', boss: '🐴', deco: '🌾', sky: '#fff3c4', ground: '#a8d06a' },
+  { table: 0,  name: 'El Gran Reto', enemy: 'MIX', boss: '🐉', deco: '👑', sky: '#e8d5ff', ground: '#b58fd9' }, // todas las tablas
+];
+const MIX_ENEMIES = ['🐰','🦊','🐬','🐵','🦓','🐧','🦎','🐐','🐷'];
+const FRUITS = ['🍎','🍌','🥕','🍉','🍓'];
+const AVATARS = ['🐰','🦊','🐬','🐵','🦁','🐧','🐨','🦄','🐱','🐶','🦉','🐢'];
+const LEVELS_PER_WORLD = 3; // el 3.º es el jefe
+const STORAGE_KEY = 'defensoras-tablas-v1';
+
+/* ================== DATOS / PERFILES ================== */
+let db = { profiles: [], currentId: null };
+function loadDB() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) db = JSON.parse(raw); } catch (e) {}
+  if (!db.profiles) db = { profiles: [], currentId: null };
+}
+function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
+function profile() { return db.profiles.find(p => p.id === db.currentId); }
+function totalStars(p) { return Object.values(p.stars || {}).reduce((a, b) => a + b, 0); }
+
+function factKey(a, b) { return Math.min(a, b) + 'x' + Math.max(a, b); }
+function statFor(p, a, b) {
+  const k = factKey(a, b);
+  if (!p.facts[k]) p.facts[k] = { ok: 0, fail: 0, streak: 0 };
+  return p.facts[k];
+}
+function mastery(st) {
+  if (!st || st.ok + st.fail === 0) return 0;
+  const ratio = st.ok / (st.ok + st.fail);
+  if (st.streak >= 3 && ratio >= 0.8) return 3;
+  if (ratio >= 0.6) return 2;
+  return 1;
+}
+
+/* ================== SELECCIÓN DE PREGUNTAS (repetición espaciada) ================== */
+let lastFactKey = null;
+function pickFact(table) {
+  const p = profile();
+  const pool = [];
+  const tables = table === 0 ? [2,3,4,5,6,7,8,9,10] : [table];
+  for (const t of tables) {
+    for (let n = 1; n <= 10; n++) {
+      const st = p.facts[factKey(t, n)];
+      // más peso a las que falla, menos a las dominadas
+      let w = 1;
+      if (st) w = Math.max(0.3, 1 + st.fail * 2 - Math.min(st.ok, 5) * 0.15);
+      pool.push({ a: t, b: n, w });
+    }
+  }
+  let pick = null;
+  for (let tries = 0; tries < 8; tries++) {
+    const total = pool.reduce((s, f) => s + f.w, 0);
+    let r = Math.random() * total;
+    pick = pool[pool.length - 1];
+    for (const f of pool) { r -= f.w; if (r <= 0) { pick = f; break; } }
+    if (factKey(pick.a, pick.b) !== lastFactKey) break; // evita repetir la misma seguida
+  }
+  lastFactKey = factKey(pick.a, pick.b);
+  // orden aleatorio para variedad: 7×3 o 3×7
+  return Math.random() < 0.5 ? { a: pick.a, b: pick.b } : { a: pick.b, b: pick.a };
+}
+
+/* ================== SONIDOS ================== */
+let actx = null;
+function initAudio() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } }
+function playNotes(freqs, dur = 0.12, type = 'sine', vol = 0.12) {
+  if (!actx) return;
+  let t = actx.currentTime;
+  for (const f of freqs) {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(t); o.stop(t + dur);
+    t += dur * 0.7;
+  }
+}
+const sfx = {
+  ok:   () => playNotes([523, 784]),
+  crit: () => playNotes([523, 659, 784, 1047], 0.1),
+  bad:  () => playNotes([170], 0.25, 'square', 0.08),
+  life: () => playNotes([260, 180], 0.2, 'triangle'),
+  win:  () => playNotes([523, 659, 784, 1047, 1319], 0.15),
+  lose: () => playNotes([330, 262, 196], 0.25, 'triangle'),
+};
+
+/* ================== NAVEGACIÓN DE PANTALLAS ================== */
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ================== PANTALLA PERFILES ================== */
+let pickedAvatar = AVATARS[0];
+function renderProfiles() {
+  const grid = document.getElementById('profile-grid');
+  grid.innerHTML = '';
+  for (const p of db.profiles) {
+    const card = document.createElement('div');
+    card.className = 'profile-card';
+    card.innerHTML = `<div class="avatar">${p.avatar}</div><div class="name">${escapeHtml(p.name)}</div>
+      <div class="meta">🪙 ${p.coins} · ⭐ ${totalStars(p)}</div>
+      <button class="del" title="Borrar perfil">✖</button>`;
+    card.querySelector('.del').addEventListener('click', ev => {
+      ev.stopPropagation();
+      if (confirm(`¿Borrar el perfil de ${p.name}? Se perderá su progreso.`)) {
+        db.profiles = db.profiles.filter(x => x.id !== p.id);
+        if (db.currentId === p.id) db.currentId = null;
+        saveDB(); renderProfiles();
+      }
+    });
+    card.addEventListener('click', () => { db.currentId = p.id; saveDB(); enterMap(); });
+    grid.appendChild(card);
+  }
+  if (db.profiles.length < 8) {
+    const add = document.createElement('div');
+    add.className = 'profile-card new';
+    add.innerHTML = `<div class="avatar">➕</div><div class="name">Nuevo perfil</div>`;
+    add.addEventListener('click', () => {
+      document.getElementById('new-profile-form').style.display = 'block';
+      document.getElementById('new-name').focus();
+    });
+    grid.appendChild(add);
+  }
+}
+function renderAvatarPicker() {
+  const wrap = document.getElementById('avatar-picker');
+  wrap.innerHTML = '';
+  for (const a of AVATARS) {
+    const b = document.createElement('button');
+    b.textContent = a;
+    if (a === pickedAvatar) b.classList.add('sel');
+    b.addEventListener('click', () => { pickedAvatar = a; renderAvatarPicker(); });
+    wrap.appendChild(b);
+  }
+}
+document.getElementById('btn-create').addEventListener('click', () => {
+  const name = document.getElementById('new-name').value.trim();
+  if (!name) { toast('Escribe tu nombre 😊'); return; }
+  const p = { id: Date.now().toString(36), name, avatar: pickedAvatar, coins: 0, stars: {}, facts: {} };
+  db.profiles.push(p); db.currentId = p.id; saveDB();
+  document.getElementById('new-name').value = '';
+  document.getElementById('new-profile-form').style.display = 'none';
+  enterMap();
+});
+document.getElementById('btn-cancel-create').addEventListener('click', () => {
+  document.getElementById('new-profile-form').style.display = 'none';
+});
+function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ================== PANTALLA MAPA ================== */
+function starsFor(p, w, l) { return p.stars[`w${w}-l${l}`] || 0; }
+function worldUnlocked(p, w) {
+  if (w === 0) return true;
+  if (w === WORLDS.length - 1) { // Gran Reto: todos los jefes vencidos
+    for (let i = 0; i < WORLDS.length - 1; i++) if (starsFor(p, i, LEVELS_PER_WORLD - 1) === 0) return false;
+    return true;
+  }
+  return starsFor(p, w - 1, LEVELS_PER_WORLD - 1) > 0;
+}
+function levelUnlocked(p, w, l) { return l === 0 || starsFor(p, w, l - 1) > 0; }
+
+function enterMap() {
+  const p = profile();
+  if (!p) { show('screen-profiles'); renderProfiles(); return; }
+  document.getElementById('map-player').textContent = `${p.avatar} ${p.name} · 🪙 ${p.coins} · ⭐ ${totalStars(p)}`;
+  const grid = document.getElementById('world-grid');
+  grid.innerHTML = '';
+  WORLDS.forEach((w, wi) => {
+    const unlocked = worldUnlocked(p, wi);
+    const card = document.createElement('div');
+    card.className = 'world-card' + (unlocked ? '' : ' locked');
+    const tableLabel = w.table === 0 ? '¡Todas las tablas!' : `Tabla del ${w.table}`;
+    const emo = w.enemy === 'MIX' ? '🐉' : w.enemy;
+    card.innerHTML = `<div class="wemoji">${w.deco} ${emo}</div>
+      <div class="wname">${w.name}</div><div class="wtable">${tableLabel}</div>
+      <div class="level-row"></div>${unlocked ? '' : '<div class="lock-badge">🔒</div>'}`;
+    const row = card.querySelector('.level-row');
+    for (let l = 0; l < LEVELS_PER_WORLD; l++) {
+      const b = document.createElement('button');
+      b.className = 'level-btn';
+      const st = starsFor(p, wi, l);
+      const stars = '★'.repeat(st) + '☆'.repeat(3 - st);
+      b.innerHTML = `<span>${l === LEVELS_PER_WORLD - 1 ? '👑' : l + 1}</span><span class="stars">${stars}</span>`;
+      b.disabled = !unlocked || !levelUnlocked(p, wi, l);
+      b.addEventListener('click', () => startGame(wi, l));
+      row.appendChild(b);
+    }
+    grid.appendChild(card);
+  });
+  show('screen-map');
+}
+document.getElementById('btn-switch-profile').addEventListener('click', () => { renderProfiles(); show('screen-profiles'); });
+document.getElementById('btn-progress').addEventListener('click', renderProgress);
+document.getElementById('btn-back-map').addEventListener('click', enterMap);
+
+/* ================== PANTALLA PROGRESO ================== */
+function renderProgress() {
+  const p = profile();
+  document.getElementById('progress-title').textContent = `📊 Progreso de ${p.name} ${p.avatar}`;
+  let html = '<table class="heat"><tr><th>×</th>';
+  for (let n = 1; n <= 10; n++) html += `<th>${n}</th>`;
+  html += '</tr>';
+  for (let t = 2; t <= 10; t++) {
+    html += `<tr><th>${t}</th>`;
+    for (let n = 1; n <= 10; n++) {
+      const st = p.facts[factKey(t, n)];
+      const m = mastery(st);
+      const title = st ? `${t}×${n}: ${st.ok} bien, ${st.fail} mal` : `${t}×${n}: sin practicar`;
+      html += `<td class="m${m}" title="${title}">${t}×${n}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</table>';
+  document.getElementById('heat-wrap').innerHTML = html;
+  show('screen-progress');
+}
+
+/* ================== EL JUEGO ================== */
+const W = 900, H = 500;
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+canvas.width = W * dpr; canvas.height = H * dpr;
+ctx.scale(dpr, dpr);
+
+const PATH = [
+  { x: -50, y: 105 }, { x: 720, y: 105 }, { x: 720, y: 250 },
+  { x: 170, y: 250 }, { x: 170, y: 395 }, { x: 852, y: 395 },
+];
+const SEGS = [];
+let PATH_LEN = 0;
+for (let i = 0; i < PATH.length - 1; i++) {
+  const dx = PATH[i+1].x - PATH[i].x, dy = PATH[i+1].y - PATH[i].y;
+  const len = Math.hypot(dx, dy);
+  SEGS.push({ from: PATH[i], dx, dy, len, start: PATH_LEN });
+  PATH_LEN += len;
+}
+function pointAt(dist) {
+  const d = Math.max(0, Math.min(dist, PATH_LEN - 0.01));
+  for (const s of SEGS) {
+    if (d <= s.start + s.len) {
+      const t = (d - s.start) / s.len;
+      return { x: s.from.x + s.dx * t, y: s.from.y + s.dy * t };
+    }
+  }
+  return PATH[PATH.length - 1];
+}
+const DEFENDER = { x: 445, y: 322 };
+
+function levelConfig(wi, li) {
+  const speed = 34 + wi * 3 + li * 4; // px/seg
+  if (li === 0) return { count: 8,  speed, interval: 5200, boss: false };
+  if (li === 1) return { count: 12, speed: speed * 1.1, interval: 4300, boss: false };
+  return { count: 6, speed, interval: 4600, boss: true };
+}
+
+const game = {
+  running: false, wi: 0, li: 0, world: null, cfg: null,
+  enemies: [], projectiles: [], particles: [],
+  spawned: 0, spawnTimer: 0, lives: 3, coins: 0, answered: 0,
+  input: '', lastTs: 0, bossSpawned: false, decoSpots: [],
+};
+
+function startGame(wi, li) {
+  const w = WORLDS[wi];
+  game.wi = wi; game.li = li; game.world = w;
+  game.cfg = levelConfig(wi, li);
+  game.enemies = []; game.projectiles = []; game.particles = [];
+  game.spawned = 0; game.spawnTimer = 500; game.lives = 3; game.coins = 0;
+  game.answered = 0; game.input = ''; game.bossSpawned = false;
+  // decoraciones en posiciones pseudo-aleatorias fijas por mundo
+  game.decoSpots = [];
+  let seed = wi * 7 + 13;
+  const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  for (let i = 0; i < 10; i++) {
+    const x = 30 + rnd() * (W - 60), y = 30 + rnd() * (H - 60);
+    if (Math.abs(y - 105) > 45 && Math.abs(y - 250) > 45 && Math.abs(y - 395) > 45) {
+      game.decoSpots.push({ x, y, s: 18 + rnd() * 16 });
+    }
+  }
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('hud-level').textContent =
+    `${w.deco} ${w.name} · ${li === LEVELS_PER_WORLD - 1 ? '👑 Jefe' : 'Nivel ' + (li + 1)}`;
+  updateHud(); updateAnswerDisplay();
+  show('screen-game');
+  game.running = true;
+  game.lastTs = performance.now();
+  requestAnimationFrame(loop);
+  if (wi === 0 && li === 0) toast('Escribe la respuesta y pulsa ✔ para lanzar comida 🍎');
+}
+
+function totalToAnswer() { return game.cfg.count + (game.cfg.boss ? 5 : 0); }
+function updateHud() {
+  document.getElementById('hud-lives').textContent = '🥬'.repeat(game.lives) + '🥀'.repeat(3 - game.lives);
+  document.getElementById('hud-coins').textContent = `🪙 ${game.coins}`;
+  document.getElementById('hud-wave').textContent = `🐾 ${game.answered}/${totalToAnswer()}`;
+}
+
+function spawnEnemy() {
+  const w = game.world;
+  const fact = pickFact(w.table);
+  const emoji = w.enemy === 'MIX' ? MIX_ENEMIES[Math.floor(Math.random() * MIX_ENEMIES.length)] : w.enemy;
+  game.enemies.push({
+    type: 'normal', emoji, fact, answer: fact.a * fact.b,
+    dist: 0, speed: game.cfg.speed * (0.92 + Math.random() * 0.16),
+    baseSpeed: game.cfg.speed, happy: false, happyT: 0, fails: 0, targetSince: null,
+  });
+}
+function spawnBoss() {
+  const fact = pickFact(game.world.table);
+  game.enemies.push({
+    type: 'boss', emoji: game.world.boss, fact, answer: fact.a * fact.b,
+    dist: 0, speed: game.cfg.speed * 0.55, baseSpeed: game.cfg.speed * 0.55,
+    happy: false, happyT: 0, fails: 0, targetSince: null, hp: 5, hpMax: 5,
+  });
+}
+function frontmost() {
+  let best = null;
+  for (const e of game.enemies) if (!e.happy && (!best || e.dist > best.dist)) best = e;
+  return best;
+}
+
+/* ---- entrada de respuestas ---- */
+function updateAnswerDisplay() {
+  document.getElementById('answer-display').innerHTML = game.input || '&nbsp;';
+}
+function pressKey(k) {
+  if (!game.running) return;
+  initAudio();
+  if (k === 'back') game.input = game.input.slice(0, -1);
+  else if (k === 'ok') submitAnswer();
+  else if (game.input.length < 3) game.input += k;
+  updateAnswerDisplay();
+}
+document.getElementById('numpad').addEventListener('click', ev => {
+  const b = ev.target.closest('button');
+  if (b) pressKey(b.dataset.k);
+});
+window.addEventListener('keydown', ev => {
+  if (!document.getElementById('screen-game').classList.contains('active')) return;
+  if (ev.key >= '0' && ev.key <= '9') pressKey(ev.key);
+  else if (ev.key === 'Backspace') { pressKey('back'); ev.preventDefault(); }
+  else if (ev.key === 'Enter') pressKey('ok');
+});
+
+function submitAnswer() {
+  const target = frontmost();
+  if (!target || game.input === '') return;
+  const p = profile();
+  const st = statFor(p, target.fact.a, target.fact.b);
+  if (parseInt(game.input, 10) === target.answer) {
+    st.ok++; st.streak++;
+    const fast = target.targetSince && (performance.now() - target.targetSince) < 3000;
+    if (target.type === 'boss') {
+      target.hp--;
+      target.dist = Math.max(0, target.dist - 90); // retrocede
+      game.answered++;
+      game.coins += fast ? 4 : 2;
+      spawnParticles(target, fast);
+      fast ? sfx.crit() : sfx.ok();
+      if (target.hp <= 0) {
+        target.happy = true; target.happyT = 0; game.coins += 10;
+      } else {
+        const f = pickFact(game.world.table);
+        target.fact = f; target.answer = f.a * f.b; target.fails = 0;
+        target.targetSince = performance.now();
+      }
+    } else {
+      target.happy = true; target.happyT = 0;
+      game.answered++;
+      game.coins += fast ? 4 : 2;
+      spawnParticles(target, fast);
+      fast ? sfx.crit() : sfx.ok();
+    }
+    launchFruit(target);
+    if (fast) floatText(target, '¡Rápido! ×2', '#ff8a3d');
+  } else {
+    st.fail++; st.streak = 0;
+    target.fails++;
+    target.speed = Math.min(target.baseSpeed * 1.6, target.speed * 1.15); // se apura un poquito
+    sfx.bad();
+    const disp = document.getElementById('answer-display');
+    disp.classList.remove('shake'); void disp.offsetWidth; disp.classList.add('shake');
+  }
+  game.input = '';
+  updateAnswerDisplay();
+  updateHud();
+}
+
+/* ---- efectos ---- */
+function launchFruit(target) {
+  game.projectiles.push({
+    x: DEFENDER.x, y: DEFENDER.y - 20, target,
+    emoji: FRUITS[Math.floor(Math.random() * FRUITS.length)], t: 0,
+  });
+}
+function spawnParticles(e, crit) {
+  const pos = pointAt(e.dist);
+  const n = crit ? 10 : 6;
+  for (let i = 0; i < n; i++) {
+    game.particles.push({
+      x: pos.x, y: pos.y - 20, vx: (Math.random() - 0.5) * 90, vy: -40 - Math.random() * 70,
+      life: 1, emoji: crit ? '✨' : '💛',
+    });
+  }
+}
+function floatText(e, text, color) {
+  const pos = pointAt(e.dist);
+  game.particles.push({ x: pos.x, y: pos.y - 55, vx: 0, vy: -30, life: 1.4, text, color });
+}
+
+/* ---- bucle principal ---- */
+function loop(ts) {
+  if (!game.running) return;
+  const dt = Math.min((ts - game.lastTs) / 1000, 0.05);
+  game.lastTs = ts;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+function update(dt) {
+  // aparición de enemigos
+  game.spawnTimer -= dt * 1000;
+  if (game.spawnTimer <= 0) {
+    if (game.spawned < game.cfg.count) {
+      spawnEnemy(); game.spawned++;
+      game.spawnTimer = game.cfg.interval * (0.85 + Math.random() * 0.3);
+    } else if (game.cfg.boss && !game.bossSpawned && game.enemies.every(e => e.happy || e.dist <= 0)) {
+      // el jefe entra cuando ya no quedan animalitos activos
+      if (game.enemies.filter(e => !e.happy).length === 0) {
+        spawnBoss(); game.bossSpawned = true;
+        toast(`¡Cuidado! ¡Llega el jefe ${game.world.boss}!`);
+      }
+      game.spawnTimer = 500;
+    }
+  }
+
+  // el objetivo actual empieza su cronómetro (para el bono de rapidez)
+  const target = frontmost();
+  if (target && !target.targetSince) target.targetSince = performance.now();
+
+  // mover enemigos
+  for (const e of game.enemies) {
+    if (e.happy) { e.happyT += dt; continue; }
+    e.dist += e.speed * dt;
+    if (e.dist >= PATH_LEN) {
+      e.happy = true; e.happyT = 10; // lo saca sin corazones
+      if (e.type === 'boss') { game.lives = 0; } else { game.lives--; }
+      sfx.life();
+      updateHud();
+      if (game.lives <= 0) { endLevel(false); return; }
+    }
+  }
+  game.enemies = game.enemies.filter(e => !e.happy || e.happyT < 0.9);
+
+  // frutas volando
+  for (const pr of game.projectiles) {
+    const pos = pointAt(pr.target.dist);
+    const dx = pos.x - pr.x, dy = (pos.y - 24) - pr.y;
+    const d = Math.hypot(dx, dy);
+    const step = 520 * dt;
+    if (d < step || d < 6) { pr.done = true; }
+    else { pr.x += dx / d * step; pr.y += dy / d * step; }
+  }
+  game.projectiles = game.projectiles.filter(pr => !pr.done);
+
+  // partículas
+  for (const pa of game.particles) {
+    pa.x += pa.vx * dt; pa.y += pa.vy * dt; pa.vy += 30 * dt; pa.life -= dt;
+  }
+  game.particles = game.particles.filter(pa => pa.life > 0);
+
+  // ¿victoria?
+  const done = game.spawned >= game.cfg.count && (!game.cfg.boss || game.bossSpawned);
+  if (done && game.enemies.length === 0 && game.answered >= totalToAnswer()) {
+    endLevel(true);
+  }
+}
+
+/* ---- dibujo ---- */
+function draw() {
+  const w = game.world;
+  // fondo
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, w.sky); grad.addColorStop(1, w.ground);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // decoración
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const d of game.decoSpots) {
+    ctx.font = `${d.s}px serif`;
+    ctx.fillText(w.deco, d.x, d.y);
+  }
+
+  // camino
+  ctx.strokeStyle = '#e0c089'; ctx.lineWidth = 46; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(PATH[0].x, PATH[0].y);
+  for (const pt of PATH.slice(1)) ctx.lineTo(pt.x, pt.y);
+  ctx.stroke();
+  ctx.strokeStyle = '#c9a869'; ctx.lineWidth = 3; ctx.setLineDash([12, 14]);
+  ctx.beginPath();
+  ctx.moveTo(PATH[0].x, PATH[0].y);
+  for (const pt of PATH.slice(1)) ctx.lineTo(pt.x, pt.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // huerto (meta)
+  ctx.font = '44px serif';
+  ctx.fillText('🏡', 862, 372);
+  ctx.font = '22px serif';
+  ctx.fillText('🥕🥬', 858, 412);
+
+  // defensor
+  const bounce = Math.sin(performance.now() / 300) * 3;
+  ctx.font = '46px serif';
+  ctx.fillText('🐶', DEFENDER.x, DEFENDER.y + bounce);
+  ctx.font = '18px serif';
+  ctx.fillText('🍎', DEFENDER.x + 26, DEFENDER.y - 22 + bounce);
+
+  // enemigos (los más atrás primero)
+  const sorted = [...game.enemies].sort((a, b) => a.dist - b.dist);
+  const tgt = frontmost();
+  for (const e of sorted) {
+    const pos = pointAt(e.dist);
+    const isBoss = e.type === 'boss';
+    const size = isBoss ? 62 : 40;
+    let y = pos.y;
+    if (e.happy) y -= e.happyT * 60;
+    ctx.globalAlpha = e.happy ? Math.max(0, 1 - e.happyT) : 1;
+    const wob = Math.sin(performance.now() / 180 + e.dist) * (e.happy ? 0 : 2);
+    ctx.font = `${size}px serif`;
+    ctx.fillText(e.emoji, pos.x, y + wob);
+    if (e.happy && e.happyT < 5) { ctx.font = '20px serif'; ctx.fillText('💖', pos.x + 20, y - 24); }
+
+    // burbuja con la multiplicación
+    if (!e.happy) {
+      const isTarget = e === tgt;
+      const label = `${e.fact.a}×${e.fact.b}`;
+      const hint = e.fails >= 2 ? ` = ${e.answer}` : '';
+      ctx.font = `bold ${isTarget ? 21 : 15}px 'Comic Sans MS', sans-serif`;
+      const tw = ctx.measureText(label + hint).width + 18;
+      const bh = isTarget ? 32 : 24;
+      const by = y - size / 2 - bh - 6;
+      const bx = Math.max(tw / 2 + 4, Math.min(pos.x, W - tw / 2 - 4)); // no salirse del borde
+      ctx.fillStyle = isTarget ? '#fff3b0' : '#ffffffee';
+      ctx.strokeStyle = isTarget ? '#ff8a3d' : '#00000022';
+      ctx.lineWidth = isTarget ? 3 : 1.5;
+      roundRect(bx - tw / 2, by, tw, bh, 10);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#4a3728';
+      ctx.fillText(label + hint, bx, by + bh / 2 + 1);
+      // vida del jefe
+      if (isBoss) {
+        ctx.font = '13px serif';
+        const pips = '🟢'.repeat(e.hp) + '⚪'.repeat(e.hpMax - e.hp);
+        ctx.fillText(pips, bx, by - 12);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // frutas
+  ctx.font = '26px serif';
+  for (const pr of game.projectiles) ctx.fillText(pr.emoji, pr.x, pr.y);
+
+  // partículas
+  for (const pa of game.particles) {
+    ctx.globalAlpha = Math.max(0, Math.min(1, pa.life));
+    if (pa.text) {
+      ctx.font = "bold 20px 'Comic Sans MS', sans-serif";
+      ctx.fillStyle = pa.color;
+      ctx.fillText(pa.text, pa.x, pa.y);
+    } else {
+      ctx.font = '18px serif';
+      ctx.fillText(pa.emoji, pa.x, pa.y);
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+function roundRect(x, y, w2, h2, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w2, y, x + w2, y + h2, r);
+  ctx.arcTo(x + w2, y + h2, x, y + h2, r);
+  ctx.arcTo(x, y + h2, x, y, r);
+  ctx.arcTo(x, y, x + w2, y, r);
+  ctx.closePath();
+}
+
+/* ---- fin de nivel ---- */
+function endLevel(won) {
+  game.running = false;
+  const p = profile();
+  const card = document.getElementById('overlay-card');
+  if (won) {
+    const stars = game.lives === 3 ? 3 : game.lives === 2 ? 2 : 1;
+    const bonus = 10;
+    p.coins += game.coins + bonus;
+    const key = `w${game.wi}-l${game.li}`;
+    p.stars[key] = Math.max(p.stars[key] || 0, stars);
+    saveDB();
+    sfx.win();
+    const starStr = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+    const hasNext = game.li < LEVELS_PER_WORLD - 1 || game.wi < WORLDS.length - 1;
+    card.innerHTML = `<div class="big-emoji">🎉🐾🎉</div>
+      <h2>¡Nivel completado!</h2>
+      <div class="stars-line">${starStr}</div>
+      <p>Ganaste 🪙 ${game.coins} + ${bonus} de premio</p>
+      <div class="actions">
+        <button class="btn blue" id="ov-map">🗺️ Mapa</button>
+        <button class="btn" id="ov-again">🔁 Repetir</button>
+        ${hasNext ? '<button class="btn" id="ov-next">➡️ Siguiente</button>' : ''}
+      </div>`;
+    const nextBtn = document.getElementById('ov-next');
+    if (nextBtn) nextBtn.addEventListener('click', () => {
+      let wi = game.wi, li = game.li + 1;
+      if (li >= LEVELS_PER_WORLD) { wi++; li = 0; }
+      if (wi < WORLDS.length && worldUnlocked(profile(), wi) && levelUnlocked(profile(), wi, li)) startGame(wi, li);
+      else enterMap();
+    });
+  } else {
+    saveDB(); // guarda las estadísticas de práctica aunque pierda
+    sfx.lose();
+    card.innerHTML = `<div class="big-emoji">😅🥬</div>
+      <h2>¡Oh no! Llegaron al huerto</h2>
+      <p>No pasa nada, ¡inténtalo otra vez!</p>
+      <div class="actions">
+        <button class="btn blue" id="ov-map">🗺️ Mapa</button>
+        <button class="btn" id="ov-again">🔁 Otra vez</button>
+      </div>`;
+  }
+  document.getElementById('ov-map').addEventListener('click', enterMap);
+  document.getElementById('ov-again').addEventListener('click', () => startGame(game.wi, game.li));
+  document.getElementById('overlay').classList.add('show');
+}
+
+/* ================== ARRANQUE ================== */
+window.addEventListener('pointerdown', initAudio, { once: true });
+loadDB();
+renderAvatarPicker();
+if (profile()) enterMap(); else { renderProfiles(); show('screen-profiles'); }
+</script>
+</body>
+</html>
