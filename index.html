@@ -25,7 +25,13 @@
   html, body { margin: 0; padding: 0; height: 100%; }
   body {
     font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', 'Segoe UI', sans-serif;
-    background: linear-gradient(180deg, #aee4ff 0%, #d3f2c2 100%);
+    background:
+      radial-gradient(closest-side, #ffffff 97%, transparent) 10% 40px / 150px 54px no-repeat,
+      radial-gradient(closest-side, #ffffffd8 97%, transparent) 82% 90px / 190px 62px no-repeat,
+      radial-gradient(closest-side, #ffffffc4 97%, transparent) 46% 20px / 120px 44px no-repeat,
+      radial-gradient(closest-side, #ffffffb0 97%, transparent) 65% 320px / 150px 50px no-repeat,
+      linear-gradient(180deg, #aee4ff 0%, #d3f2c2 100%);
+    background-attachment: fixed;
     color: var(--ink);
     overflow-x: hidden;
   }
@@ -84,7 +90,10 @@
     box-shadow: 0 4px 10px #0001; border: 3px solid #e8ddc8; position: relative;
   }
   .world-card.locked { filter: grayscale(1); opacity: .55; }
-  .world-card .wemoji { font-size: 2.6rem; }
+  .island-wrap { position: relative; height: 104px; }
+  .island-wrap svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .island-wrap .wemoji { position: absolute; top: 0; left: 0; right: 0; text-align: center; }
+  .world-card .wemoji { font-size: 2.4rem; }
   .world-card .wname { font-weight: bold; font-size: 1.1rem; }
   .world-card .wtable { font-size: .95rem; opacity: .75; margin-bottom: 8px; }
   .level-row { display: flex; gap: 6px; justify-content: center; }
@@ -291,7 +300,7 @@ const WORLDS = [
   { table: 4,  name: 'El Océano',   enemy: '🐬', boss: '🐳', deco: '🐚', sky: '#bde3f7', ground: '#5fb8d9' },
   { table: 5,  name: 'La Selva',    enemy: '🐵', boss: '🦍', deco: '🌴', sky: '#d7f0b2', ground: '#4c9a42' },
   { table: 6,  name: 'La Sabana',   enemy: '🦓', boss: '🦁', deco: '🌳', sky: '#ffe9b8', ground: '#d9b45f' },
-  { table: 7,  name: 'El Ártico',   enemy: '🐧', boss: '🐻‍❄️', deco: '⛄', sky: '#dcefff', ground: '#eaf6ff' },
+  { table: 7,  name: 'El Ártico',   enemy: '🐧', boss: '🐻‍❄️', deco: '⛄', sky: '#dcefff', ground: '#eaf6ff', cliff: ['#c2d9ea', '#8fa8c0'] },
   { table: 8,  name: 'El Desierto', enemy: '🦎', boss: '🐫', deco: '🌵', sky: '#ffe3c2', ground: '#e8c883' },
   { table: 9,  name: 'La Montaña',  enemy: '🐐', boss: '🦅', deco: '🏔️', sky: '#d8dff0', ground: '#a3b08c' },
   { table: 10, name: 'La Granja',   enemy: '🐷', boss: '🐴', deco: '🌾', sky: '#fff3c4', ground: '#a8d06a' },
@@ -547,6 +556,19 @@ function worldUnlocked(p, w) {
 }
 function levelUnlocked(p, w, l) { return l === 0 || starsFor(p, w, l - 1) > 0; }
 
+function islandSVG(w) {
+  const cliff = w.cliff || ['#c08552', '#7a4a28'];
+  return `<svg viewBox="0 0 220 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="112" cy="96" rx="60" ry="7" fill="#00000018"/>
+    <path d="M34 56 C40 84 60 76 68 92 L84 78 L98 100 L116 84 L132 98 L148 80 L158 90 C172 78 182 82 186 56 Z"
+      fill="${cliff[1]}"/>
+    <path d="M38 56 C44 78 62 72 70 84 L86 74 L98 90 L114 78 L130 90 L146 76 L156 82 C168 74 178 76 182 56 Z"
+      fill="${cliff[0]}"/>
+    <ellipse cx="110" cy="52" rx="80" ry="21" fill="${w.ground}"/>
+    <ellipse cx="110" cy="49" rx="72" ry="16" fill="#ffffff2e"/>
+    <ellipse cx="110" cy="52" rx="80" ry="21" fill="none" stroke="#f7ffb8" stroke-width="3"/>
+  </svg>`;
+}
 function enterMap() {
   const p = profile();
   if (!p) { show('screen-profiles'); renderProfiles(); return; }
@@ -557,9 +579,10 @@ function enterMap() {
     const unlocked = worldUnlocked(p, wi);
     const card = document.createElement('div');
     card.className = 'world-card' + (unlocked ? '' : ' locked');
+    card.style.background = `linear-gradient(180deg, ${w.sky} 0%, #fffdf5 68%)`;
     const tableLabel = w.table === 0 ? '¡Todas las tablas!' : `Tabla del ${w.table}`;
     const emo = w.enemy === 'MIX' ? '🐉' : w.enemy;
-    card.innerHTML = `<div class="wemoji">${w.deco} ${emo}</div>
+    card.innerHTML = `<div class="island-wrap">${islandSVG(w)}<div class="wemoji">${w.deco} ${emo}</div></div>
       <div class="wname">${w.name}</div><div class="wtable">${tableLabel}</div>
       <div class="level-row"></div>${unlocked ? '' : '<div class="lock-badge">🔒</div>'}`;
     const row = card.querySelector('.level-row');
@@ -730,14 +753,15 @@ function startGame(wi, li) {
   game.spawned = 0; game.spawnTimer = 500; game.lives = 3; game.coins = 0;
   game.answered = 0; game.escaped = 0; game.input = ''; game.bossSpawned = false;
   game.runFast = 0; game.runFails = 0;
-  // decoraciones en posiciones pseudo-aleatorias fijas por mundo
+  // decoraciones en posiciones pseudo-aleatorias fijas por mundo, sobre la isla
   game.decoSpots = [];
   let seed = wi * 7 + 13;
   const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-  for (let i = 0; i < 10; i++) {
-    const x = 30 + rnd() * (W - 60), y = 30 + rnd() * (H - 60);
-    if (Math.abs(y - 105) > 45 && Math.abs(y - 250) > 45 && Math.abs(y - 395) > 45) {
-      game.decoSpots.push({ x, y, s: 18 + rnd() * 16 });
+  for (let i = 0; i < 14; i++) {
+    const x = 30 + rnd() * (W - 90), y = 84 + rnd() * 322;
+    const r = rnd();
+    if (Math.abs(y - 105) > 48 && Math.abs(y - 250) > 48 && Math.abs(y - 395) > 48) {
+      game.decoSpots.push({ x, y, s: 16 + rnd() * 16, type: r < 0.38 ? 'bush' : r < 0.55 ? 'rock' : 'emoji' });
     }
   }
   document.getElementById('overlay').classList.remove('show');
@@ -956,24 +980,156 @@ function update(dt) {
   }
 }
 
-/* ---- dibujo ---- */
+/* ---- dibujo: isla flotante estilo cartoon ---- */
+const CLOUDS = [
+  { x: 80,  y: 28, s: 0.9, v: 9,  front: false },
+  { x: 420, y: 20, s: 0.65, v: 13, front: false },
+  { x: 700, y: 38, s: 1.05, v: 6, front: false },
+  { x: 250, y: 468, s: 1.0, v: 11, front: true },
+  { x: 640, y: 478, s: 0.8, v: 15, front: true },
+];
+function drawCloud(cx, cy, s, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  for (const [dx, dy, r] of [[0, -7, 23], [24, -1, 17], [-26, 0, 16], [45, 5, 11], [-47, 6, 10]]) {
+    ctx.moveTo(cx + (dx + r) * s, cy + dy * s);
+    ctx.arc(cx + dx * s, cy + dy * s, r * s, 0, Math.PI * 2);
+  }
+  ctx.fill();
+  roundRect(cx - 55 * s, cy - 2 * s, 110 * s, 15 * s, 8 * s); ctx.fill();
+  ctx.fillStyle = '#d8ecfa';
+  roundRect(cx - 46 * s, cy + 7 * s, 92 * s, 6 * s, 3 * s); ctx.fill();
+  ctx.restore();
+}
+function drawIslet(x, y, s, w) {
+  ctx.save();
+  ctx.translate(x, y); ctx.scale(s, s);
+  ctx.fillStyle = '#8a5a34';
+  ctx.beginPath();
+  ctx.moveTo(-38, 4); ctx.lineTo(-18, 34); ctx.lineTo(0, 22);
+  ctx.lineTo(16, 38); ctx.lineTo(33, 6); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = w.ground;
+  ctx.beginPath(); ctx.ellipse(0, 2, 42, 12, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#f7ffb8'; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.fillStyle = '#000';
+  ctx.font = '18px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('🌳', 0, -8);
+  ctx.restore();
+}
+function drawBush(x, y, s) {
+  ctx.fillStyle = '#3e8a3a';
+  ctx.beginPath();
+  ctx.arc(x - s * .4, y + s * .1, s * .42, 0, Math.PI * 2);
+  ctx.arc(x + s * .4, y + s * .12, s * .4, 0, Math.PI * 2);
+  ctx.arc(x, y - s * .18, s * .5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#5cb356';
+  ctx.beginPath();
+  ctx.arc(x - s * .12, y - s * .2, s * .3, 0, Math.PI * 2);
+  ctx.arc(x + s * .3, y + s * .02, s * .24, 0, Math.PI * 2);
+  ctx.fill();
+}
+function drawRock(x, y, s) {
+  ctx.fillStyle = '#9aa3ad';
+  ctx.beginPath();
+  ctx.moveTo(x - s * .55, y + s * .35); ctx.lineTo(x - s * .3, y - s * .3);
+  ctx.lineTo(x + s * .1, y - s * .45); ctx.lineTo(x + s * .55, y + s * .05);
+  ctx.lineTo(x + s * .4, y + s * .35); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#c2cad2';
+  ctx.beginPath();
+  ctx.moveTo(x - s * .3, y - s * .3); ctx.lineTo(x + s * .1, y - s * .45);
+  ctx.lineTo(x + s * .2, y - s * .05); ctx.lineTo(x - s * .15, y + s * .05); ctx.closePath(); ctx.fill();
+}
+function drawWaterfall() {
+  const x = 96, top = 424, bot = H;
+  ctx.fillStyle = '#a8dff5';
+  roundRect(x - 17, top, 34, bot - top + 20, 10); ctx.fill();
+  ctx.fillStyle = '#ffffff88';
+  const off = (performance.now() / 6) % 24;
+  for (let y = top - 24 + off; y < bot; y += 24) {
+    const h = Math.min(14, bot - y);
+    if (y > top + 4 && h > 3) { roundRect(x - 9, y, 5, h, 2); ctx.fill(); roundRect(x + 5, y, 5, h, 2); ctx.fill(); }
+  }
+  ctx.fillStyle = '#bfe9fa';
+  ctx.beginPath(); ctx.ellipse(x, top + 2, 24, 7, 0, 0, Math.PI * 2); ctx.fill();
+}
+function drawIsland(w) {
+  const cliff = w.cliff || ['#c08552', '#7a4a28'];
+  // acantilado colgante con borde rocoso irregular
+  const jag = [[-30, 468], [40, 486], [95, 462], [150, 496], [210, 470], [260, 488],
+               [330, 458], [390, 492], [450, 468], [520, 496], [580, 464], [640, 488],
+               [700, 460], [760, 492], [820, 466], [880, 478]];
+  const cg = ctx.createLinearGradient(0, 420, 0, 500);
+  cg.addColorStop(0, cliff[0]); cg.addColorStop(1, cliff[1]);
+  ctx.fillStyle = cg;
+  ctx.beginPath();
+  ctx.moveTo(-30, 400); ctx.lineTo(880, 400); ctx.lineTo(880, 450);
+  for (let i = jag.length - 1; i >= 0; i--) ctx.lineTo(jag[i][0], jag[i][1]);
+  ctx.closePath(); ctx.fill();
+  // grietas de la roca
+  ctx.strokeStyle = '#00000026'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  for (const x of [120, 300, 490, 680, 810]) {
+    ctx.beginPath(); ctx.moveTo(x, 440); ctx.lineTo(x - 8, 458); ctx.lineTo(x + 4, 472); ctx.stroke();
+  }
+  // meseta de pasto
+  ctx.fillStyle = w.ground;
+  roundRect(-30, 62, 910, 372, 60); ctx.fill();
+  const gl = ctx.createLinearGradient(0, 62, 0, 310);
+  gl.addColorStop(0, '#ffffff30'); gl.addColorStop(1, '#ffffff00');
+  ctx.fillStyle = gl;
+  roundRect(-30, 62, 910, 372, 60); ctx.fill();
+  // borde iluminado de la isla
+  ctx.globalAlpha = 0.85;
+  ctx.strokeStyle = '#f7ffb8'; ctx.lineWidth = 5;
+  roundRect(-27, 65, 904, 366, 57); ctx.stroke();
+  ctx.globalAlpha = 1;
+  // cascada (excepto en el desierto)
+  if (w.table !== 8) drawWaterfall();
+}
+
 function draw() {
   const w = game.world;
-  // fondo
+  const t = performance.now() / 1000;
+  // cielo
   const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, w.sky); grad.addColorStop(1, w.ground);
+  grad.addColorStop(0, w.sky); grad.addColorStop(1, '#eaf7ff');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
+  // nubes lejanas e isletas del fondo
+  for (const c of CLOUDS) if (!c.front) drawCloud(((c.x + t * c.v) % (W + 240)) - 120, c.y, c.s, 0.92);
+  drawIslet(660, 28, 0.55, w);
+  drawIslet(150, 32, 0.42, w);
+  // la isla flotante
+  drawIsland(w);
+  // nubes que pasan por delante del acantilado
+  for (const c of CLOUDS) if (c.front) drawCloud(((c.x + t * c.v) % (W + 240)) - 120, c.y, c.s, 0.95);
 
-  // decoración
+  // decoración sobre el pasto (con sombrita)
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const d of game.decoSpots) {
-    ctx.font = `${d.s}px serif`;
-    ctx.fillText(w.deco, d.x, d.y);
+    ctx.fillStyle = '#00000014';
+    ctx.beginPath(); ctx.ellipse(d.x, d.y + d.s * 0.45, d.s * 0.7, d.s * 0.2, 0, 0, Math.PI * 2); ctx.fill();
+    const kind = (d.type === 'bush' && w.table === 7) ? 'rock' : d.type; // en el Ártico no crecen arbustos
+    if (kind === 'bush') drawBush(d.x, d.y, d.s);
+    else if (kind === 'rock') drawRock(d.x, d.y, d.s);
+    else {
+      // los emoji de color heredan el alfa del fillStyle: debe ser opaco
+      ctx.fillStyle = '#000';
+      ctx.font = `${d.s + 8}px serif`;
+      ctx.fillText(w.deco, d.x, d.y);
+    }
   }
 
   // camino
-  ctx.strokeStyle = '#e0c089'; ctx.lineWidth = 46; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.strokeStyle = '#b98a4f'; ctx.lineWidth = 50;
+  ctx.beginPath();
+  ctx.moveTo(PATH[0].x, PATH[0].y);
+  for (const pt of PATH.slice(1)) ctx.lineTo(pt.x, pt.y);
+  ctx.stroke();
+  ctx.strokeStyle = '#e8cf9a'; ctx.lineWidth = 42;
   ctx.beginPath();
   ctx.moveTo(PATH[0].x, PATH[0].y);
   for (const pt of PATH.slice(1)) ctx.lineTo(pt.x, pt.y);
@@ -986,6 +1142,9 @@ function draw() {
   ctx.setLineDash([]);
 
   // huerto (meta)
+  ctx.fillStyle = '#00000016';
+  ctx.beginPath(); ctx.ellipse(862, 396, 34, 10, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#000';
   ctx.font = '44px serif';
   ctx.fillText('🏡', 862, 372);
   ctx.font = '22px serif';
@@ -993,6 +1152,9 @@ function draw() {
 
   // defensor + mascota
   const bounce = Math.sin(performance.now() / 300) * 3;
+  ctx.fillStyle = '#00000016';
+  ctx.beginPath(); ctx.ellipse(DEFENDER.x, DEFENDER.y + 22, 26, 8, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#000';
   ctx.font = '46px serif';
   ctx.fillText(defenderEmoji(), DEFENDER.x, DEFENDER.y + bounce);
   ctx.font = '18px serif';
@@ -1012,8 +1174,13 @@ function draw() {
     const size = isBoss ? 62 : 40;
     let y = pos.y;
     if (e.happy) y -= e.happyT * 60;
+    if (!e.happy) {
+      ctx.fillStyle = '#00000016';
+      ctx.beginPath(); ctx.ellipse(pos.x, pos.y + size * 0.42, size * 0.42, size * 0.13, 0, 0, Math.PI * 2); ctx.fill();
+    }
     ctx.globalAlpha = e.happy ? Math.max(0, 1 - e.happyT) : 1;
     const wob = Math.sin(performance.now() / 180 + e.dist) * (e.happy ? 0 : 2);
+    ctx.fillStyle = '#000'; // los emoji heredan el alfa del fillStyle: opaco siempre
     ctx.font = `${size}px serif`;
     ctx.fillText(e.emoji, pos.x, y + wob);
     if (e.happy && e.happyT < 5) { ctx.font = '20px serif'; ctx.fillText('💖', pos.x + 20, y - 24); }
@@ -1046,6 +1213,7 @@ function draw() {
   }
 
   // frutas
+  ctx.fillStyle = '#000';
   ctx.font = '26px serif';
   for (const pr of game.projectiles) ctx.fillText(pr.emoji, pr.x, pr.y);
 
@@ -1057,6 +1225,7 @@ function draw() {
       ctx.fillStyle = pa.color;
       ctx.fillText(pa.text, pa.x, pa.y);
     } else {
+      ctx.fillStyle = '#000';
       ctx.font = '18px serif';
       ctx.fillText(pa.emoji, pa.x, pa.y);
     }
