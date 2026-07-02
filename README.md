@@ -1,6 +1,10 @@
 # 🐾 Defensoras de las Tablas
 
-Un juego tipo *tower defense* para aprender las tablas de multiplicar (del 2 al 10), con temática de animales. Todo el juego vive en un solo archivo: `index.html`.
+Un juego tipo *tower defense* para aprender las tablas de multiplicar (del 2 al 10), con temática de animales.
+
+**Juega aquí:** https://juanmezardz.github.io/test/
+
+El juego principal vive en `index.html`; lo acompañan `sw.js`, `manifest.webmanifest` y los íconos (`icon-192.png`, `icon-512.png`) que lo convierten en una app instalable (PWA).
 
 ## Cómo se juega
 
@@ -16,6 +20,12 @@ Un juego tipo *tower defense* para aprender las tablas de multiplicar (del 2 al 
 - Cada mundo es una tabla: La Pradera 🐰 (tabla del 2), El Bosque 🦊 (del 3)… hasta La Granja 🐷 (del 10) y **El Gran Reto** 🐉 con todas mezcladas.
 - Cada mundo tiene 2 niveles + un **jefe** 👑 (hay que responder 5 multiplicaciones para vencerlo).
 - Se ganan hasta 3 estrellas por nivel según las lechugas que conserves. Vencer al jefe desbloquea el siguiente mundo.
+
+## Tienda, logros y app instalable
+
+- **🛒 Tienda:** las monedas ganadas se gastan en defensores nuevos (🐱🦉🐨🦄🐲), sets de comida para lanzar (dulces, fiesta, magia) y mascotas de compañía que acompañan al defensor en el campo.
+- **🏅 Logros:** 10 insignias coleccionables (primera victoria, 5 respuestas rápidas en un nivel, nivel perfecto, vencer 3 jefes, dominar una tabla completa…). Se anuncian al terminar el nivel y se ven en la pantalla de Logros.
+- **📱 App instalable (PWA):** al abrir el juego desde el link, el navegador ofrece "Agregar a pantalla de inicio" (en Android/Chrome sale solo; en iPhone/iPad: botón compartir → "Agregar a pantalla de inicio"). Queda con su propio ícono y **funciona sin internet** gracias al service worker.
 
 ## Perfiles
 

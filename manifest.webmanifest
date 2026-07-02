@@ -1,0 +1,17 @@
+{
+  "name": "Defensoras de las Tablas",
+  "short_name": "Tablas",
+  "description": "Aprende las tablas de multiplicar defendiendo el huerto de los animalitos",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#aee4ff",
+  "theme_color": "#7ec850",
+  "lang": "es",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
