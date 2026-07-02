@@ -1,4 +1,4 @@
-name: Deploy game to GitHub Pages
+name: Publish game to GitHub Pages
 
 on:
   push:
@@ -6,26 +6,29 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
         with:
-          enablement: true
-      - run: mkdir -p _site && cp index.html _site/index.html
-      - uses: actions/upload-pages-artifact@v3
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          fetch-depth: 0
+      - name: Copy game to gh-pages branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin gh-pages
+          git checkout gh-pages
+          git checkout "${{ github.sha }}" -- index.html
+          if git diff --cached --quiet; then
+            echo "Sin cambios en el juego"
+          else
+            git commit -m "Update game from ${{ github.sha }}"
+            git push origin gh-pages
+          fi
