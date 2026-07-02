@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Defensoras de las Tablas 🐾</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#7ec850">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
   :root {
     --bg: #7ec850;
@@ -105,6 +112,25 @@
   .legend .l1::before { color: #f5b8b1; } .legend .l2::before { color: #ffe08a; }
   .legend .l3::before { color: #a8e6a1; } .legend .l0::before { color: #eee9de; }
 
+  /* ---- Tienda y logros ---- */
+  .shop-cat-title { text-align: center; font-size: 1.25rem; margin: 20px 0 10px; }
+  .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .shop-card { background: var(--panel); border: 3px solid #e8ddc8; border-radius: 18px; padding: 12px 8px; text-align: center; box-shadow: 0 4px 10px #0001; }
+  .shop-card .semoji { font-size: 2.6rem; }
+  .shop-card .sname { font-weight: bold; }
+  .shop-card .sprice { font-size: .95rem; opacity: .8; margin: 4px 0 8px; }
+  .shop-card button { font-family: inherit; font-weight: bold; font-size: .95rem; border: none; border-radius: 12px; padding: 8px 14px; cursor: pointer; color: #fff; }
+  .shop-card button.buy { background: var(--accent); box-shadow: 0 3px 0 #c96a26; }
+  .shop-card button.buy:disabled { background: #b9b3a8; box-shadow: 0 3px 0 #8f8a80; cursor: default; }
+  .shop-card button.equip { background: var(--accent2); box-shadow: 0 3px 0 #3a87c4; }
+  .shop-card button.equipped { background: var(--good); box-shadow: 0 3px 0 #3d8c48; }
+  .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .badge-card { background: var(--panel); border: 3px solid #ffd76e; border-radius: 18px; padding: 14px 10px; text-align: center; box-shadow: 0 4px 10px #0001; }
+  .badge-card.locked { border-color: #e8ddc8; filter: grayscale(1); opacity: .55; }
+  .badge-card .bemoji { font-size: 2.4rem; }
+  .badge-card .bname { font-weight: bold; margin-top: 2px; }
+  .badge-card .bdesc { font-size: .85rem; opacity: .75; margin-top: 2px; }
+
   /* ---- Juego ---- */
   #screen-game { padding: 8px; display: none; flex-direction: column; align-items: center; }
   #screen-game.active { display: flex; }
@@ -182,7 +208,11 @@
   <div class="topbar">
     <button class="btn blue small" id="btn-switch-profile">👤 Cambiar perfil</button>
     <div class="hud-item" id="map-player" style="background:#fffdf5cc; border-radius:12px; padding:6px 14px; font-weight:bold; box-shadow:0 2px 6px #0002;"></div>
-    <button class="btn small" id="btn-progress">📊 Progreso</button>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn small" id="btn-shop">🛒 Tienda</button>
+      <button class="btn small" id="btn-badges">🏅 Logros</button>
+      <button class="btn small" id="btn-progress">📊 Progreso</button>
+    </div>
   </div>
   <h1>Mapa de Aventuras</h1>
   <p class="subtitle">Cada mundo es una tabla. ¡Gana estrellas para desbloquear el siguiente!</p>
@@ -201,6 +231,27 @@
     <span class="l3">Dominada</span><span class="l2">Casi</span>
     <span class="l1">A practicar</span><span class="l0">Sin practicar</span>
   </div>
+</div>
+
+<!-- ============ PANTALLA: TIENDA ============ -->
+<div id="screen-shop" class="screen">
+  <div class="topbar">
+    <button class="btn blue small" id="btn-shop-back">⬅ Volver al mapa</button>
+    <div id="shop-coins" style="background:#fffdf5cc; border-radius:12px; padding:6px 14px; font-weight:bold; box-shadow:0 2px 6px #0002;"></div>
+  </div>
+  <h1>🛒 La Tienda</h1>
+  <p class="subtitle">¡Gana monedas jugando y mejora tu equipo!</p>
+  <div id="shop-body"></div>
+</div>
+
+<!-- ============ PANTALLA: LOGROS ============ -->
+<div id="screen-badges" class="screen">
+  <div class="topbar">
+    <button class="btn blue small" id="btn-badges-back">⬅ Volver al mapa</button>
+  </div>
+  <h1 id="badges-title">🏅 Logros</h1>
+  <p class="subtitle">Colecciona todas las insignias jugando</p>
+  <div class="badge-grid" id="badge-grid"></div>
 </div>
 
 <!-- ============ PANTALLA: JUEGO ============ -->
@@ -247,16 +298,102 @@ const WORLDS = [
   { table: 0,  name: 'El Gran Reto', enemy: 'MIX', boss: '🐉', deco: '👑', sky: '#e8d5ff', ground: '#b58fd9' }, // todas las tablas
 ];
 const MIX_ENEMIES = ['🐰','🦊','🐬','🐵','🦓','🐧','🦎','🐐','🐷'];
-const FRUITS = ['🍎','🍌','🥕','🍉','🍓'];
 const AVATARS = ['🐰','🦊','🐬','🐵','🦁','🐧','🐨','🦄','🐱','🐶','🦉','🐢'];
 const LEVELS_PER_WORLD = 3; // el 3.º es el jefe
 const STORAGE_KEY = 'defensoras-tablas-v1';
+
+/* ================== TIENDA ================== */
+const SHOP = [
+  // defensores del huerto
+  { id: 'dog',       cat: 'defender', emoji: '🐶', name: 'Toby',     price: 0 },
+  { id: 'cat',       cat: 'defender', emoji: '🐱', name: 'Michi',    price: 100 },
+  { id: 'owl',       cat: 'defender', emoji: '🦉', name: 'Sabia',    price: 200 },
+  { id: 'koala',     cat: 'defender', emoji: '🐨', name: 'Kimi',     price: 300 },
+  { id: 'unicorn',   cat: 'defender', emoji: '🦄', name: 'Estrella', price: 500 },
+  { id: 'dragon',    cat: 'defender', emoji: '🐲', name: 'Chispa',   price: 800 },
+  // comida para lanzar
+  { id: 'basic',     cat: 'fruits', emoji: '🍎', name: 'Frutas',  price: 0,   set: ['🍎','🍌','🥕','🍉','🍓'] },
+  { id: 'sweets',    cat: 'fruits', emoji: '🍭', name: 'Dulces',  price: 150, set: ['🍭','🍩','🧁','🍪','🍬'] },
+  { id: 'party',     cat: 'fruits', emoji: '🌮', name: 'Fiesta',  price: 250, set: ['🌮','🍕','🥨','🧀','🥞'] },
+  { id: 'magic',     cat: 'fruits', emoji: '✨', name: 'Magia',   price: 400, set: ['✨','🌟','💫','⚡','🌈'] },
+  // mascotas de compañía
+  { id: 'butterfly', cat: 'pet', emoji: '🦋', name: 'Flor',  price: 90 },
+  { id: 'chick',     cat: 'pet', emoji: '🐣', name: 'Pío',   price: 120 },
+  { id: 'parrot',    cat: 'pet', emoji: '🦜', name: 'Kiko',  price: 180 },
+  { id: 'turtle',    cat: 'pet', emoji: '🐢', name: 'Tuga',  price: 220 },
+];
+const SHOP_CATS = [
+  ['defender', '🛡️ Defensores del huerto'],
+  ['fruits', '🍎 Comida para lanzar'],
+  ['pet', '🐾 Mascotas de compañía'],
+];
+function shopItem(id) { return SHOP.find(s => s.id === id); }
+
+/* ================== LOGROS ================== */
+const BADGES = [
+  { id: 'first_win',    emoji: '🎉', name: 'Primera victoria',    desc: 'Completa tu primer nivel',
+    check: (p, run) => run && run.won },
+  { id: 'three_stars',  emoji: '🌟', name: 'Tres estrellas',      desc: 'Gana 3 estrellas en un nivel',
+    check: (p, run) => run && run.won && run.stars === 3 },
+  { id: 'fast5',        emoji: '⚡', name: 'Rayo veloz',          desc: '5 respuestas rápidas en un nivel',
+    check: (p, run) => run && run.fast >= 5 },
+  { id: 'perfect',      emoji: '🎯', name: 'Puntería perfecta',   desc: 'Completa un nivel sin fallar ninguna',
+    check: (p, run) => run && run.won && run.fails === 0 },
+  { id: 'boss3',        emoji: '👑', name: 'Cazajefes',           desc: 'Vence a 3 jefes',
+    check: (p) => countBossWins(p) >= 3 },
+  { id: 'dragon',       emoji: '🐉', name: 'Leyenda del Gran Reto', desc: 'Vence al jefe final de todas las tablas',
+    check: (p) => starsFor(p, WORLDS.length - 1, LEVELS_PER_WORLD - 1) > 0 },
+  { id: 'table_master', emoji: '🧠', name: 'Tabla dominada',      desc: 'Pon toda una tabla en verde',
+    check: (p) => anyTableMastered(p) },
+  { id: 'all_master',   emoji: '🏆', name: 'Supercerebrito',      desc: 'Domina TODAS las tablas',
+    check: (p) => allTablesMastered(p) },
+  { id: 'rich',         emoji: '💰', name: 'Gran ahorro',         desc: 'Junta 300 monedas',
+    check: (p) => p.coins >= 300 },
+  { id: 'shopper',      emoji: '🛍️', name: 'Coleccionista',       desc: 'Compra 3 cosas en la tienda',
+    check: (p) => ownedCount(p) >= 3 },
+];
+function countBossWins(p) {
+  let n = 0;
+  for (let w = 0; w < WORLDS.length; w++) if (starsFor(p, w, LEVELS_PER_WORLD - 1) > 0) n++;
+  return n;
+}
+function tableMastered(p, t) {
+  for (let n = 1; n <= 10; n++) if (mastery(p.facts[factKey(t, n)]) !== 3) return false;
+  return true;
+}
+function anyTableMastered(p) { for (let t = 2; t <= 10; t++) if (tableMastered(p, t)) return true; return false; }
+function allTablesMastered(p) { for (let t = 2; t <= 10; t++) if (!tableMastered(p, t)) return false; return true; }
+function ownedCount(p) {
+  // compras reales: se descuentan los dos artículos gratis
+  return p.items.defender.length + p.items.fruits.length + p.items.pet.length - 2;
+}
+function checkBadges(run) {
+  const p = profile();
+  const earned = [];
+  for (const b of BADGES) {
+    if (p.badges[b.id]) continue;
+    let ok = false;
+    try { ok = !!b.check(p, run); } catch (e) {}
+    if (ok) { p.badges[b.id] = Date.now(); earned.push(b); }
+  }
+  if (earned.length) saveDB();
+  return earned;
+}
 
 /* ================== DATOS / PERFILES ================== */
 let db = { profiles: [], currentId: null };
 function loadDB() {
   try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) db = JSON.parse(raw); } catch (e) {}
   if (!db.profiles) db = { profiles: [], currentId: null };
+  db.profiles.forEach(ensureDefaults);
+}
+function ensureDefaults(p) {
+  // migra perfiles creados antes de la tienda y los logros
+  if (!p.facts) p.facts = {};
+  if (!p.stars) p.stars = {};
+  if (!p.items) p.items = { defender: ['dog'], fruits: ['basic'], pet: [] };
+  if (!p.equipped) p.equipped = { defender: 'dog', fruits: 'basic', pet: null };
+  if (!p.badges) p.badges = {};
 }
 function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
 function profile() { return db.profiles.find(p => p.id === db.currentId); }
@@ -348,7 +485,7 @@ function renderProfiles() {
     const card = document.createElement('div');
     card.className = 'profile-card';
     card.innerHTML = `<div class="avatar">${p.avatar}</div><div class="name">${escapeHtml(p.name)}</div>
-      <div class="meta">🪙 ${p.coins} · ⭐ ${totalStars(p)}</div>
+      <div class="meta">🪙 ${p.coins} · ⭐ ${totalStars(p)} · 🏅 ${Object.keys(p.badges).length}</div>
       <button class="del" title="Borrar perfil">✖</button>`;
     card.querySelector('.del').addEventListener('click', ev => {
       ev.stopPropagation();
@@ -387,6 +524,7 @@ document.getElementById('btn-create').addEventListener('click', () => {
   const name = document.getElementById('new-name').value.trim();
   if (!name) { toast('Escribe tu nombre 😊'); return; }
   const p = { id: Date.now().toString(36), name, avatar: pickedAvatar, coins: 0, stars: {}, facts: {} };
+  ensureDefaults(p);
   db.profiles.push(p); db.currentId = p.id; saveDB();
   document.getElementById('new-name').value = '';
   document.getElementById('new-profile-form').style.display = 'none';
@@ -442,6 +580,79 @@ function enterMap() {
 document.getElementById('btn-switch-profile').addEventListener('click', () => { renderProfiles(); show('screen-profiles'); });
 document.getElementById('btn-progress').addEventListener('click', renderProgress);
 document.getElementById('btn-back-map').addEventListener('click', enterMap);
+document.getElementById('btn-shop').addEventListener('click', () => { renderShop(); show('screen-shop'); });
+document.getElementById('btn-shop-back').addEventListener('click', enterMap);
+document.getElementById('btn-badges').addEventListener('click', renderBadges);
+document.getElementById('btn-badges-back').addEventListener('click', enterMap);
+
+/* ================== PANTALLA TIENDA ================== */
+function renderShop() {
+  const p = profile();
+  document.getElementById('shop-coins').textContent = `🪙 ${p.coins}`;
+  const body = document.getElementById('shop-body');
+  body.innerHTML = '';
+  for (const [cat, title] of SHOP_CATS) {
+    const h = document.createElement('div');
+    h.className = 'shop-cat-title';
+    h.textContent = title;
+    body.appendChild(h);
+    const grid = document.createElement('div');
+    grid.className = 'shop-grid';
+    for (const item of SHOP.filter(s => s.cat === cat)) {
+      const owned = p.items[cat].includes(item.id);
+      const inUse = p.equipped[cat] === item.id;
+      const card = document.createElement('div');
+      card.className = 'shop-card';
+      let btn;
+      if (!owned) btn = `<button class="buy" ${p.coins < item.price ? 'disabled' : ''}>Comprar</button>`;
+      else if (inUse) btn = `<button class="equipped">${cat === 'pet' ? 'Me acompaña ✓' : 'En uso ✓'}</button>`;
+      else btn = `<button class="equip">Usar</button>`;
+      card.innerHTML = `<div class="semoji">${item.emoji}</div><div class="sname">${item.name}</div>
+        <div class="sprice">${item.price === 0 ? 'Gratis' : '🪙 ' + item.price}</div>${btn}`;
+      card.querySelector('button').addEventListener('click', () => {
+        initAudio();
+        if (!owned) {
+          if (p.coins < item.price) return;
+          p.coins -= item.price;
+          p.items[cat].push(item.id);
+          p.equipped[cat] = item.id;
+          saveDB();
+          sfx.win();
+          toast(`¡${item.name} ${item.emoji} es tuyo!`);
+          const nb = checkBadges(null);
+          if (nb.length) setTimeout(() => toast(`🏅 ¡Insignia nueva! ${nb[0].emoji} ${nb[0].name}`), 1500);
+        } else if (inUse && cat === 'pet') {
+          p.equipped.pet = null; // las mascotas se pueden guardar
+          saveDB();
+        } else if (!inUse) {
+          p.equipped[cat] = item.id;
+          saveDB();
+        }
+        renderShop();
+      });
+      grid.appendChild(card);
+    }
+    body.appendChild(grid);
+  }
+}
+
+/* ================== PANTALLA LOGROS ================== */
+function renderBadges() {
+  const p = profile();
+  document.getElementById('badges-title').textContent =
+    `🏅 Logros de ${p.name} (${Object.keys(p.badges).length}/${BADGES.length})`;
+  const grid = document.getElementById('badge-grid');
+  grid.innerHTML = '';
+  for (const b of BADGES) {
+    const got = !!p.badges[b.id];
+    const card = document.createElement('div');
+    card.className = 'badge-card' + (got ? '' : ' locked');
+    card.innerHTML = `<div class="bemoji">${got ? b.emoji : '❓'}</div>
+      <div class="bname">${b.name}</div><div class="bdesc">${b.desc}</div>`;
+    grid.appendChild(card);
+  }
+  show('screen-badges');
+}
 
 /* ================== PANTALLA PROGRESO ================== */
 function renderProgress() {
@@ -518,6 +729,7 @@ function startGame(wi, li) {
   game.enemies = []; game.projectiles = []; game.particles = [];
   game.spawned = 0; game.spawnTimer = 500; game.lives = 3; game.coins = 0;
   game.answered = 0; game.escaped = 0; game.input = ''; game.bossSpawned = false;
+  game.runFast = 0; game.runFails = 0;
   // decoraciones en posiciones pseudo-aleatorias fijas por mundo
   game.decoSpots = [];
   let seed = wi * 7 + 13;
@@ -601,6 +813,7 @@ function submitAnswer() {
   if (parseInt(game.input, 10) === target.answer) {
     st.ok++; st.streak++;
     const fast = target.targetSince && (performance.now() - target.targetSince) < 3000;
+    if (fast) game.runFast++;
     if (target.type === 'boss') {
       target.hp--;
       target.dist = Math.max(0, target.dist - 90); // retrocede
@@ -627,6 +840,7 @@ function submitAnswer() {
   } else {
     st.fail++; st.streak = 0;
     target.fails++;
+    game.runFails++;
     target.speed = Math.min(target.baseSpeed * 1.6, target.speed * 1.15); // se apura un poquito
     sfx.bad();
     const disp = document.getElementById('answer-display');
@@ -638,10 +852,24 @@ function submitAnswer() {
 }
 
 /* ---- efectos ---- */
+function fruitSet() {
+  const it = shopItem(profile().equipped.fruits);
+  return (it && it.set) || shopItem('basic').set;
+}
+function defenderEmoji() {
+  const it = shopItem(profile().equipped.defender);
+  return it ? it.emoji : '🐶';
+}
+function petEmoji() {
+  const id = profile().equipped.pet;
+  const it = id && shopItem(id);
+  return it ? it.emoji : null;
+}
 function launchFruit(target) {
+  const set = fruitSet();
   game.projectiles.push({
     x: DEFENDER.x, y: DEFENDER.y - 20, target,
-    emoji: FRUITS[Math.floor(Math.random() * FRUITS.length)], t: 0,
+    emoji: set[Math.floor(Math.random() * set.length)], t: 0,
   });
 }
 function spawnParticles(e, crit) {
@@ -763,12 +991,17 @@ function draw() {
   ctx.font = '22px serif';
   ctx.fillText('🥕🥬', 858, 412);
 
-  // defensor
+  // defensor + mascota
   const bounce = Math.sin(performance.now() / 300) * 3;
   ctx.font = '46px serif';
-  ctx.fillText('🐶', DEFENDER.x, DEFENDER.y + bounce);
+  ctx.fillText(defenderEmoji(), DEFENDER.x, DEFENDER.y + bounce);
   ctx.font = '18px serif';
-  ctx.fillText('🍎', DEFENDER.x + 26, DEFENDER.y - 22 + bounce);
+  ctx.fillText(fruitSet()[0], DEFENDER.x + 26, DEFENDER.y - 22 + bounce);
+  const pet = petEmoji();
+  if (pet) {
+    ctx.font = '24px serif';
+    ctx.fillText(pet, DEFENDER.x - 40, DEFENDER.y + 12 - bounce);
+  }
 
   // enemigos (los más atrás primero)
   const sorted = [...game.enemies].sort((a, b) => a.dist - b.dist);
@@ -853,12 +1086,16 @@ function endLevel(won) {
     p.stars[key] = Math.max(p.stars[key] || 0, stars);
     saveDB();
     sfx.win();
+    const newBadges = checkBadges({ won: true, stars, fast: game.runFast, fails: game.runFails });
+    const badgeLines = newBadges.map(b =>
+      `<p>🏅 ¡Insignia nueva! ${b.emoji} <b>${b.name}</b></p>`).join('');
     const starStr = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
     const hasNext = game.li < LEVELS_PER_WORLD - 1 || game.wi < WORLDS.length - 1;
     card.innerHTML = `<div class="big-emoji">🎉🐾🎉</div>
       <h2>¡Nivel completado!</h2>
       <div class="stars-line">${starStr}</div>
       <p>Ganaste 🪙 ${game.coins} + ${bonus} de premio</p>
+      ${badgeLines}
       <div class="actions">
         <button class="btn blue" id="ov-map">🗺️ Mapa</button>
         <button class="btn" id="ov-again">🔁 Repetir</button>
@@ -873,6 +1110,7 @@ function endLevel(won) {
     });
   } else {
     saveDB(); // guarda las estadísticas de práctica aunque pierda
+    checkBadges({ won: false, fast: game.runFast, fails: game.runFails });
     sfx.lose();
     card.innerHTML = `<div class="big-emoji">😅🥬</div>
       <h2>¡Oh no! Llegaron al huerto</h2>
@@ -888,6 +1126,12 @@ function endLevel(won) {
 }
 
 /* ================== ARRANQUE ================== */
+// PWA: instalable y jugable sin internet cuando se sirve por https
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
 window.addEventListener('pointerdown', initAudio, { once: true });
 loadDB();
 renderAvatarPicker();
