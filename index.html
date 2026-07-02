@@ -517,7 +517,7 @@ function startGame(wi, li) {
   game.cfg = levelConfig(wi, li);
   game.enemies = []; game.projectiles = []; game.particles = [];
   game.spawned = 0; game.spawnTimer = 500; game.lives = 3; game.coins = 0;
-  game.answered = 0; game.input = ''; game.bossSpawned = false;
+  game.answered = 0; game.escaped = 0; game.input = ''; game.bossSpawned = false;
   // decoraciones en posiciones pseudo-aleatorias fijas por mundo
   game.decoSpots = [];
   let seed = wi * 7 + 13;
@@ -543,7 +543,7 @@ function totalToAnswer() { return game.cfg.count + (game.cfg.boss ? 5 : 0); }
 function updateHud() {
   document.getElementById('hud-lives').textContent = '🥬'.repeat(game.lives) + '🥀'.repeat(3 - game.lives);
   document.getElementById('hud-coins').textContent = `🪙 ${game.coins}`;
-  document.getElementById('hud-wave').textContent = `🐾 ${game.answered}/${totalToAnswer()}`;
+  document.getElementById('hud-wave').textContent = `🐾 ${game.answered + game.escaped}/${totalToAnswer()}`;
 }
 
 function spawnEnemy() {
@@ -696,7 +696,7 @@ function update(dt) {
     e.dist += e.speed * dt;
     if (e.dist >= PATH_LEN) {
       e.happy = true; e.happyT = 10; // lo saca sin corazones
-      if (e.type === 'boss') { game.lives = 0; } else { game.lives--; }
+      if (e.type === 'boss') { game.lives = 0; } else { game.lives--; game.escaped++; }
       sfx.life();
       updateHud();
       if (game.lives <= 0) { endLevel(false); return; }
@@ -721,9 +721,9 @@ function update(dt) {
   }
   game.particles = game.particles.filter(pa => pa.life > 0);
 
-  // ¿victoria?
+  // ¿victoria? (los escapados también cuentan como resueltos: si no, el nivel nunca termina)
   const done = game.spawned >= game.cfg.count && (!game.cfg.boss || game.bossSpawned);
-  if (done && game.enemies.length === 0 && game.answered >= totalToAnswer()) {
+  if (done && game.enemies.length === 0) {
     endLevel(true);
   }
 }
