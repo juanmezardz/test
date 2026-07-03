@@ -296,7 +296,7 @@
 /* ================== CONFIGURACIÓN DE MUNDOS ================== */
 const WORLDS = [
   { table: 2,  name: 'La Pradera',  enemy: '🐰', boss: '🐮', deco: '🌼', sky: '#bfe8ff', ground: '#97d356', groundDark: '#74b13c',
-    flora: ['tree', 'tree', 'bush', 'flower', 'flower', 'emoji', 'monolith'] },
+    flora: ['tree', 'tree', 'pine', 'bush', 'flower', 'flower', 'monolith'] },
   { table: 3,  name: 'El Bosque',   enemy: '🦊', boss: '🐻', deco: '🍄', sky: '#cde8c0', ground: '#61a34e', groundDark: '#4b823c',
     flora: ['tree', 'tree', 'tree', 'bush', 'emoji', 'flower'] },
   { table: 4,  name: 'El Océano',   enemy: '🐬', boss: '🐳', deco: '🐚', sky: '#bde3f7', ground: '#5fb8d9', groundDark: '#4795b3',
@@ -1088,6 +1088,13 @@ function drawTree(x, y, s) {
   ctx.fill();
   ctx.fillStyle = '#8fe08a';
   ctx.beginPath(); ctx.arc(x - s * 0.06, cy - s * 0.26, s * 0.13, 0, Math.PI * 2); ctx.fill();
+  // moteado de la copa (pixeles de luz y sombra)
+  const tr = makeRnd(x * 7 + y * 13);
+  for (let i = 0; i < 30; i++) {
+    const a = tr() * Math.PI * 2, rr = tr() * s * 0.52;
+    ctx.fillStyle = tr() < 0.5 ? '#8fe08a' : '#2e6b2e';
+    ctx.fillRect(x + Math.cos(a) * rr - 2, cy + Math.sin(a) * rr * 0.92 - 2, 4, 4);
+  }
 }
 function drawPalm(x, y, s) {
   const by = y + s * 0.45;
@@ -1160,17 +1167,28 @@ function drawMonolith(x, y, s) {
   ctx.closePath(); ctx.fill();
 }
 function drawFlower(x, y, s) {
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  for (let i = 0; i < 5; i++) {
-    const a = i * Math.PI * 2 / 5;
-    const px = x + Math.cos(a) * s * 0.5, py = y + Math.sin(a) * s * 0.5;
-    ctx.moveTo(px + s * 0.32, py);
-    ctx.arc(px, py, s * 0.32, 0, Math.PI * 2);
+  if ((Math.floor(x) + Math.floor(y)) % 2 === 0) {
+    // flor rosa chunky como la referencia
+    ctx.fillStyle = '#c43a55';
+    ctx.beginPath(); ctx.ellipse(x, y + s * 0.1, s * 0.75, s * 0.55, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ff6b8a';
+    ctx.beginPath(); ctx.ellipse(x, y - s * 0.05, s * 0.6, s * 0.42, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffd24a';
+    ctx.beginPath(); ctx.arc(x, y - s * 0.1, s * 0.22, 0, Math.PI * 2); ctx.fill();
+  } else {
+    // florecita blanca
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const a = i * Math.PI * 2 / 5;
+      const px = x + Math.cos(a) * s * 0.5, py = y + Math.sin(a) * s * 0.5;
+      ctx.moveTo(px + s * 0.32, py);
+      ctx.arc(px, py, s * 0.32, 0, Math.PI * 2);
+    }
+    ctx.fill();
+    ctx.fillStyle = '#ffd24a';
+    ctx.beginPath(); ctx.arc(x, y, s * 0.3, 0, Math.PI * 2); ctx.fill();
   }
-  ctx.fill();
-  ctx.fillStyle = '#ffd24a';
-  ctx.beginPath(); ctx.arc(x, y, s * 0.3, 0, Math.PI * 2); ctx.fill();
 }
 function drawPond(w) {
   const frozen = w.table === 7;
@@ -1202,41 +1220,42 @@ function drawPond(w) {
   ctx.moveTo(100, 319); ctx.lineTo(112, 317);
   ctx.stroke();
 }
-function drawLandscape(w) {
-  // el mundo allá abajo: colinas, playa y mar
-  ctx.fillStyle = '#c2e89a';
-  ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, 518);
-  ctx.quadraticCurveTo(140, 498, 300, 516);
-  ctx.quadraticCurveTo(460, 532, 620, 510);
-  ctx.quadraticCurveTo(760, 494, 900, 514);
-  ctx.lineTo(900, H); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = w.table === 8 ? '#e0c88a' : '#9fd06a';
-  ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, 532);
-  ctx.quadraticCurveTo(200, 514, 400, 532);
-  ctx.quadraticCurveTo(600, 548, 900, 526);
-  ctx.lineTo(900, H); ctx.closePath(); ctx.fill();
-  // arbolitos lejanos
-  ctx.fillStyle = '#4e9e4e';
-  for (const [tx, ty] of [[150, 524], [520, 532], [790, 522]]) {
-    ctx.beginPath(); ctx.arc(tx, ty, 6, 0, Math.PI * 2); ctx.fill();
-  }
-  // playa
-  ctx.fillStyle = '#f0dc8a';
-  ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, 546);
-  ctx.quadraticCurveTo(300, 536, 560, 548);
-  ctx.quadraticCurveTo(760, 556, 900, 544);
-  ctx.lineTo(900, H); ctx.closePath(); ctx.fill();
-  // mar
-  ctx.fillStyle = '#48c4d8';
-  ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, 554);
-  ctx.quadraticCurveTo(240, 546, 480, 554);
-  ctx.quadraticCurveTo(700, 560, 900, 552);
-  ctx.lineTo(900, H); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = '#8fe4ee'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+function drawBuoy(x, y) {
+  // reflejo en el agua
+  ctx.fillStyle = '#ffffff77';
+  ctx.beginPath(); ctx.ellipse(x, y + 5, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.moveTo(x - 9, y); ctx.lineTo(x, y - 24); ctx.lineTo(x + 9, y); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#3f9e58';
   ctx.beginPath();
-  ctx.moveTo(120, 556); ctx.lineTo(170, 556);
-  ctx.moveTo(600, 557); ctx.lineTo(650, 557);
+  ctx.moveTo(x - 6.5, y - 6); ctx.lineTo(x - 5, y - 12); ctx.lineTo(x + 5, y - 12); ctx.lineTo(x + 6.5, y - 6);
+  ctx.closePath(); ctx.fill();
+}
+function drawLandscape(w) {
+  // mar abierto bajo la isla, como la referencia
+  const wg = ctx.createLinearGradient(0, 490, 0, H);
+  wg.addColorStop(0, '#3aa0aa'); wg.addColorStop(1, '#2f8f9e');
+  ctx.fillStyle = wg;
+  ctx.fillRect(0, 494, W, H - 494);
+  // olas suaves
+  ctx.strokeStyle = '#7fd4d8'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(60, 516); ctx.lineTo(130, 516);
+  ctx.moveTo(690, 508); ctx.lineTo(760, 508);
+  ctx.moveTo(320, 548); ctx.lineTo(400, 548);
+  ctx.moveTo(770, 546); ctx.lineTo(850, 546);
   ctx.stroke();
+  // espuma/reflejo blanco bajo la isla
+  ctx.fillStyle = '#e8fbffcc';
+  ctx.beginPath();
+  for (const [fx, frx] of [[180, 60], [330, 76], [500, 64], [670, 72], [810, 46]]) {
+    ctx.moveTo(fx + frx, 534);
+    ctx.ellipse(fx, 534, frx, 7, 0, 0, Math.PI * 2);
+  }
+  ctx.fill();
+  // boyas
+  drawBuoy(56, 528);
+  drawBuoy(850, 520);
 }
 function drawRock(x, y, s) {
   ctx.fillStyle = '#9aa3ad';
@@ -1337,6 +1356,13 @@ function drawIsland(w) {
     ctx.moveTo(c.m + 16, 442); ctx.lineTo(c.m + 22, 460);
     ctx.moveTo(c.a + 18, 430); ctx.lineTo(c.a + 40, 434);
     ctx.stroke();
+    // moteado de la roca
+    const cr = makeRnd(c.a * 17 + 5);
+    for (let j = 0; j < 10; j++) {
+      const rx = c.a + 8 + cr() * (c.b - c.a - 20), ry = 424 + cr() * (c.deep - 448);
+      ctx.fillStyle = cr() < 0.5 ? cliff[0] : cliff[2];
+      ctx.fillRect(rx, ry, 4, 4);
+    }
   });
   // falda de pasto en sombra (asoma bajo la meseta)
   ctx.save(); ctx.translate(0, 9);
@@ -1350,9 +1376,28 @@ function drawIsland(w) {
   gl.addColorStop(0, '#ffffff30'); gl.addColorStop(1, '#ffffff00');
   ctx.fillStyle = gl;
   plateauPath(); ctx.fill();
+  // textura moteada del pasto (pixelitos de luz y sombra, como la referencia)
+  ctx.save();
+  plateauPath(); ctx.clip();
+  const nr = makeRnd(11 + w.table * 131);
+  for (let i = 0; i < 850; i++) {
+    const nx = -30 + nr() * 912, ny = 58 + nr() * 392;
+    const kind = nr();
+    ctx.fillStyle = kind < 0.42 ? '#ffffff2a' : kind < 0.84 ? '#00000014' : '#ffff8c26';
+    ctx.fillRect(nx, ny, 4, 4);
+  }
+  // piedritas verdes dispersas
+  for (let i = 0; i < 22; i++) {
+    const nx = -20 + nr() * 900, ny = 70 + nr() * 370;
+    ctx.fillStyle = '#3f8f3f';
+    ctx.fillRect(nx, ny, 7, 5);
+    ctx.fillStyle = '#6cc26a';
+    ctx.fillRect(nx + 1, ny - 2, 4, 3);
+  }
+  ctx.restore();
   // borde iluminado
-  ctx.globalAlpha = 0.9;
-  ctx.strokeStyle = '#f7ffb8'; ctx.lineWidth = 5;
+  ctx.globalAlpha = 0.95;
+  ctx.strokeStyle = '#d7f77c'; ctx.lineWidth = 6;
   plateauPath(); ctx.stroke();
   ctx.globalAlpha = 1;
   // matitas de pasto
@@ -1367,10 +1412,14 @@ function drawIsland(w) {
   }
 }
 
+function makeRnd(seed) {
+  let s = Math.abs(Math.floor(seed)) % 233280 || 7;
+  return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+}
 function drawScene(w, t) {
-  // cielo
+  // cielo turquesa como la referencia
   const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, w.sky); grad.addColorStop(1, '#c9ecec');
+  grad.addColorStop(0, '#41b1b5'); grad.addColorStop(1, '#8ad8d4');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
   // destellos

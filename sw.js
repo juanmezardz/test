@@ -1,6 +1,6 @@
 // Service worker de Defensoras de las Tablas: red primero, caché como respaldo,
 // para que las actualizaciones lleguen solas y el juego funcione sin internet.
-const CACHE = 'defensoras-v7';
+const CACHE = 'defensoras-v8';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
