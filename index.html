@@ -149,7 +149,7 @@
   }
   #hud .hud-item { background: #fffdf5cc; border-radius: 12px; padding: 4px 12px; box-shadow: 0 2px 6px #0002; }
   #canvas-wrap { position: relative; width: 100%; max-width: 900px; }
-  canvas { width: 100%; display: block; border-radius: 18px; box-shadow: 0 6px 16px #0003; }
+  canvas { width: 100%; display: block; border-radius: 18px; box-shadow: 0 6px 16px #0003; image-rendering: pixelated; }
 
   #answer-area { width: 100%; max-width: 900px; margin-top: 8px; display: flex; gap: 10px; align-items: stretch; justify-content: center; flex-wrap: wrap; }
   #answer-display {
@@ -718,10 +718,15 @@ function renderProgress() {
 /* ================== EL JUEGO ================== */
 const W = 900, H = 560; // franja inferior: paisaje lejano bajo la isla
 const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+let ctx = canvas.getContext('2d');
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
 canvas.width = W * dpr; canvas.height = H * dpr;
 ctx.scale(dpr, dpr);
+// estilo pixel-art: la escena se dibuja en este lienzo pequeño y se amplía sin suavizado
+const PX = 4;
+const bgCanvas = document.createElement('canvas');
+bgCanvas.width = Math.ceil(W / PX); bgCanvas.height = Math.ceil(H / PX);
+const bctx = bgCanvas.getContext('2d');
 
 const PATH = [
   { x: -50, y: 105 }, { x: 720, y: 105 }, { x: 720, y: 250 },
@@ -773,8 +778,8 @@ function startGame(wi, li) {
   game.decoSpots = [];
   let seed = wi * 7 + 13;
   const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-  const DECO_SIZES = { tree: [34, 20], palm: [34, 18], pine: [30, 16], cactus: [26, 14],
-    monolith: [26, 16], bush: [16, 14], rock: [14, 12], flower: [9, 5], emoji: [18, 12] };
+  const DECO_SIZES = { tree: [40, 22], palm: [38, 18], pine: [34, 16], cactus: [28, 14],
+    monolith: [26, 16], bush: [18, 14], rock: [14, 12], flower: [10, 5], emoji: [18, 12] };
   for (let i = 0; i < 52 && game.decoSpots.length < 17; i++) {
     const x = 30 + rnd() * (W - 90), y = 84 + rnd() * 322;
     const type = w.flora[Math.floor(rnd() * w.flora.length)];
@@ -1038,9 +1043,7 @@ function drawIslet(x, y, s, w) {
   ctx.fillStyle = w.ground;
   ctx.beginPath(); ctx.ellipse(0, 2, 42, 12, 0, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = '#f7ffb8'; ctx.lineWidth = 2.5; ctx.stroke();
-  ctx.fillStyle = '#000';
-  ctx.font = '18px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('🌳', 0, -8);
+  drawTree(0, -18, 22);
   ctx.restore();
 }
 function drawBush(x, y, s) {
@@ -1364,14 +1367,19 @@ function drawIsland(w) {
   }
 }
 
-function draw() {
-  const w = game.world;
-  const t = performance.now() / 1000;
+function drawScene(w, t) {
   // cielo
   const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, w.sky); grad.addColorStop(1, '#eaf7ff');
+  grad.addColorStop(0, w.sky); grad.addColorStop(1, '#c9ecec');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
+  // destellos
+  ctx.fillStyle = '#ffffffcc';
+  for (const [sx, sy, ss] of [[120, 40, 5], [300, 22, 4], [520, 46, 5], [700, 16, 4],
+                              [836, 58, 6], [40, 508, 5], [864, 498, 4], [590, 505, 5]]) {
+    ctx.fillRect(sx - ss, sy - 1.5, ss * 2, 3);
+    ctx.fillRect(sx - 1.5, sy - ss, 3, ss * 2);
+  }
   // nubes lejanas e isletas del fondo
   for (const c of CLOUDS) if (!c.front) drawCloud(((c.x + t * c.v) % (W + 240)) - 120, c.y, c.s, 0.92);
   drawIslet(660, 28, 0.55, w);
@@ -1380,6 +1388,11 @@ function draw() {
   drawLandscape(w);
   // la isla flotante
   drawIsland(w);
+  // manchones de luz en el pasto
+  ctx.fillStyle = '#ffffff16';
+  for (const [mx, my, mr] of [[300, 180, 70], [620, 170, 60], [450, 320, 80], [760, 305, 55], [200, 330, 50]]) {
+    ctx.beginPath(); ctx.ellipse(mx, my, mr, mr * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+  }
   // agua: estanque, arroyo y cascada (excepto en el desierto)
   if (w.table !== 8) { drawPond(w); drawWaterfall(); }
   // nubes que pasan por delante del acantilado
@@ -1404,7 +1417,7 @@ function draw() {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // vegetación y decoración sobre el pasto (tras el camino, ordenada por profundidad)
+  // vegetación sobre el pasto (tras el camino, ordenada por profundidad)
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const d of game.decoSpots) {
     ctx.fillStyle = '#00000014';
@@ -1417,12 +1430,29 @@ function draw() {
     else if (d.type === 'bush') drawBush(d.x, d.y, d.s);
     else if (d.type === 'rock') drawRock(d.x, d.y, d.s);
     else if (d.type === 'flower') drawFlower(d.x, d.y, d.s);
-    else {
-      // los emoji de color heredan el alfa del fillStyle: debe ser opaco
-      ctx.fillStyle = '#000';
-      ctx.font = `${d.s + 8}px serif`;
-      ctx.fillText(w.deco, d.x, d.y);
-    }
+    // los de tipo 'emoji' se dibujan nítidos fuera de la escena pixelada
+  }
+}
+
+function draw() {
+  const w = game.world;
+  const t = performance.now() / 1000;
+  // la escena se pinta a baja resolución y se amplía sin suavizado -> pixel art
+  const main = ctx;
+  ctx = bctx;
+  ctx.setTransform(1 / PX, 0, 0, 1 / PX, 0, 0);
+  drawScene(w, t);
+  ctx = main;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(bgCanvas, 0, 0, W, H);
+
+  // decoración emoji nítida sobre la escena
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const d of game.decoSpots) {
+    if (d.type !== 'emoji') continue;
+    ctx.fillStyle = '#000';
+    ctx.font = `${d.s + 8}px serif`;
+    ctx.fillText(w.deco, d.x, d.y);
   }
 
   // huerto (meta)
