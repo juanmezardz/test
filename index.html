@@ -295,25 +295,25 @@
 
 /* ================== CONFIGURACIÓN DE MUNDOS ================== */
 const WORLDS = [
-  { table: 2,  name: 'La Pradera',  enemy: '🐰', boss: '🐮', deco: '🌼', sky: '#bfe8ff', ground: '#8fd06a',
+  { table: 2,  name: 'La Pradera',  enemy: '🐰', boss: '🐮', deco: '🌼', sky: '#bfe8ff', ground: '#97d356', groundDark: '#74b13c',
     flora: ['tree', 'tree', 'bush', 'flower', 'flower', 'emoji', 'monolith'] },
-  { table: 3,  name: 'El Bosque',   enemy: '🦊', boss: '🐻', deco: '🍄', sky: '#cde8c0', ground: '#5f9e4f',
+  { table: 3,  name: 'El Bosque',   enemy: '🦊', boss: '🐻', deco: '🍄', sky: '#cde8c0', ground: '#61a34e', groundDark: '#4b823c',
     flora: ['tree', 'tree', 'tree', 'bush', 'emoji', 'flower'] },
-  { table: 4,  name: 'El Océano',   enemy: '🐬', boss: '🐳', deco: '🐚', sky: '#bde3f7', ground: '#5fb8d9',
+  { table: 4,  name: 'El Océano',   enemy: '🐬', boss: '🐳', deco: '🐚', sky: '#bde3f7', ground: '#5fb8d9', groundDark: '#4795b3',
     flora: ['palm', 'palm', 'bush', 'emoji', 'flower'] },
-  { table: 5,  name: 'La Selva',    enemy: '🐵', boss: '🦍', deco: '🌴', sky: '#d7f0b2', ground: '#4c9a42',
+  { table: 5,  name: 'La Selva',    enemy: '🐵', boss: '🦍', deco: '🌴', sky: '#d7f0b2', ground: '#4f9e43', groundDark: '#3d7f33',
     flora: ['palm', 'tree', 'tree', 'bush', 'monolith'] },
-  { table: 6,  name: 'La Sabana',   enemy: '🦓', boss: '🦁', deco: '🌳', sky: '#ffe9b8', ground: '#d9b45f',
+  { table: 6,  name: 'La Sabana',   enemy: '🦓', boss: '🦁', deco: '🌳', sky: '#ffe9b8', ground: '#d9b45f', groundDark: '#b7924a',
     flora: ['tree', 'rock', 'bush', 'emoji'] },
-  { table: 7,  name: 'El Ártico',   enemy: '🐧', boss: '🐻‍❄️', deco: '⛄', sky: '#dcefff', ground: '#eaf6ff',
-    cliff: ['#c2d9ea', '#8fa8c0'], flora: ['pine', 'pine', 'rock', 'emoji'] },
-  { table: 8,  name: 'El Desierto', enemy: '🦎', boss: '🐫', deco: '🌵', sky: '#ffe3c2', ground: '#e8c883',
+  { table: 7,  name: 'El Ártico',   enemy: '🐧', boss: '🐻‍❄️', deco: '⛄', sky: '#dcefff', ground: '#eaf6ff', groundDark: '#c9dcea',
+    cliff: ['#d5e6f2', '#b3cbdd', '#8fa8c0', '#6d8aa5'], flora: ['pine', 'pine', 'rock', 'emoji'] },
+  { table: 8,  name: 'El Desierto', enemy: '🦎', boss: '🐫', deco: '🌵', sky: '#ffe3c2', ground: '#e8c883', groundDark: '#c6a566',
     flora: ['cactus', 'cactus', 'rock', 'monolith', 'emoji'] },
-  { table: 9,  name: 'La Montaña',  enemy: '🐐', boss: '🦅', deco: '🏔️', sky: '#d8dff0', ground: '#a3b08c',
+  { table: 9,  name: 'La Montaña',  enemy: '🐐', boss: '🦅', deco: '🏔️', sky: '#d8dff0', ground: '#a3b08c', groundDark: '#859270',
     flora: ['pine', 'rock', 'monolith', 'emoji'] },
-  { table: 10, name: 'La Granja',   enemy: '🐷', boss: '🐴', deco: '🌾', sky: '#fff3c4', ground: '#a8d06a',
+  { table: 10, name: 'La Granja',   enemy: '🐷', boss: '🐴', deco: '🌾', sky: '#fff3c4', ground: '#a8d06a', groundDark: '#88af50',
     flora: ['tree', 'flower', 'bush', 'emoji'] },
-  { table: 0,  name: 'El Gran Reto', enemy: 'MIX', boss: '🐉', deco: '👑', sky: '#e8d5ff', ground: '#b58fd9',
+  { table: 0,  name: 'El Gran Reto', enemy: 'MIX', boss: '🐉', deco: '👑', sky: '#e8d5ff', ground: '#b58fd9', groundDark: '#9573b5',
     flora: ['tree', 'palm', 'monolith', 'flower', 'emoji'] }, // todas las tablas
 ];
 const MIX_ENEMIES = ['🐰','🦊','🐬','🐵','🦓','🐧','🦎','🐐','🐷'];
@@ -1058,9 +1058,19 @@ function drawBush(x, y, s) {
 }
 function drawTree(x, y, s) {
   const by = y + s * 0.45;
+  ctx.fillStyle = '#6d4526';
+  roundRect(x - s * 0.11, by - s * 0.55, s * 0.22, s * 0.55, s * 0.06); ctx.fill();
   ctx.fillStyle = '#8a5a34';
-  roundRect(x - s * 0.09, by - s * 0.55, s * 0.18, s * 0.55, s * 0.05); ctx.fill();
+  roundRect(x - s * 0.09, by - s * 0.55, s * 0.13, s * 0.53, s * 0.05); ctx.fill();
   const cy = by - s * 0.85;
+  // contorno oscuro de la copa
+  ctx.fillStyle = '#2e6b2e';
+  ctx.beginPath();
+  ctx.arc(x - s * 0.34, cy + s * 0.15, s * 0.32, 0, Math.PI * 2);
+  ctx.arc(x + s * 0.34, cy + s * 0.15, s * 0.32, 0, Math.PI * 2);
+  ctx.arc(x, cy - s * 0.12, s * 0.39, 0, Math.PI * 2);
+  ctx.arc(x, cy + s * 0.19, s * 0.36, 0, Math.PI * 2);
+  ctx.fill();
   ctx.fillStyle = '#3e8a3a';
   ctx.beginPath();
   ctx.arc(x - s * 0.34, cy + s * 0.12, s * 0.3, 0, Math.PI * 2);
@@ -1160,24 +1170,33 @@ function drawFlower(x, y, s) {
   ctx.beginPath(); ctx.arc(x, y, s * 0.3, 0, Math.PI * 2); ctx.fill();
 }
 function drawPond(w) {
-  const colors = w.table === 7 ? ['#cfeaf7', '#eef9ff'] : ['#54c0e8', '#9fe2f7'];
+  const frozen = w.table === 7;
+  const deep = frozen ? '#9fc4dd' : '#2e8ab8';
+  const mid  = frozen ? '#cfeaf7' : '#54c0e8';
+  const lite = frozen ? '#eef9ff' : '#9fe2f7';
+  // orilla de arena
+  ctx.fillStyle = frozen ? '#dcebf5' : '#ecd9a4';
+  ctx.beginPath(); ctx.ellipse(96, 317, 54, 26, 0, 0, Math.PI * 2); ctx.fill();
   // arroyo que baja hacia la cascada
-  ctx.fillStyle = colors[0];
-  roundRect(84, 320, 24, 108, 10); ctx.fill();
-  // estanque
-  ctx.fillStyle = colors[0];
-  ctx.beginPath(); ctx.ellipse(96, 316, 48, 22, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = colors[1];
-  ctx.beginPath(); ctx.ellipse(96, 314, 38, 16, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.globalAlpha = 0.7;
-  ctx.strokeStyle = '#f7ffb8'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.ellipse(96, 316, 48, 22, 0, 0, Math.PI * 2); ctx.stroke();
-  ctx.globalAlpha = 1;
-  // destellos
-  ctx.strokeStyle = '#ffffffcc'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+  ctx.fillStyle = mid;
+  roundRect(84, 322, 24, 104, 10); ctx.fill();
+  ctx.strokeStyle = deep; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(76, 312); ctx.lineTo(90, 310);
-  ctx.moveTo(100, 320); ctx.lineTo(112, 318);
+  ctx.moveTo(86, 336); ctx.lineTo(86, 420);
+  ctx.moveTo(106, 336); ctx.lineTo(106, 420);
+  ctx.stroke();
+  // estanque en capas
+  ctx.fillStyle = deep;
+  ctx.beginPath(); ctx.ellipse(96, 316, 50, 23, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = mid;
+  ctx.beginPath(); ctx.ellipse(96, 315, 43, 18, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = lite;
+  ctx.beginPath(); ctx.ellipse(93, 313, 30, 12, 0, 0, Math.PI * 2); ctx.fill();
+  // destellos
+  ctx.strokeStyle = '#ffffffdd'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(76, 311); ctx.lineTo(90, 309);
+  ctx.moveTo(100, 319); ctx.lineTo(112, 317);
   ctx.stroke();
 }
 function drawLandscape(w) {
@@ -1239,45 +1258,110 @@ function drawWaterfall() {
     const h = Math.min(14, bot - 12 - y);
     if (y > top + 4 && h > 3) { roundRect(x - 9, y, 5, h, 2); ctx.fill(); roundRect(x + 5, y, 5, h, 2); ctx.fill(); }
   }
-  ctx.fillStyle = '#bfe9fa';
-  ctx.beginPath(); ctx.ellipse(x, top + 2, 24, 7, 0, 0, Math.PI * 2); ctx.fill();
-  // neblina donde el agua se pierde en el aire
+  // espuma en el labio de la cascada
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  for (const [fx, fr] of [[-11, 5], [0, 6.5], [11, 5]]) {
+    ctx.moveTo(x + fx + fr, top + 3);
+    ctx.arc(x + fx, top + 3, fr, 0, Math.PI * 2);
+  }
+  ctx.fill();
+  // salpicadura y neblina al pie
+  ctx.fillStyle = '#ffffffaa';
+  ctx.beginPath();
+  for (const [fx, fy, fr] of [[-15, -16, 4.5], [15, -18, 4], [0, -12, 5.5]]) {
+    ctx.moveTo(x + fx + fr, bot + fy);
+    ctx.arc(x + fx, bot + fy, fr, 0, Math.PI * 2);
+  }
+  ctx.fill();
   ctx.fillStyle = '#ffffff66';
   ctx.beginPath();
   ctx.ellipse(x - 10, bot - 8, 16, 8, 0, 0, Math.PI * 2);
   ctx.ellipse(x + 12, bot - 4, 14, 7, 0, 0, Math.PI * 2);
   ctx.fill();
 }
-function drawIsland(w) {
-  const cliff = w.cliff || ['#c08552', '#7a4a28'];
-  // acantilado colgante con borde rocoso irregular
-  const jag = [[-30, 468], [40, 486], [95, 462], [150, 496], [210, 470], [260, 488],
-               [330, 458], [390, 492], [450, 468], [520, 496], [580, 464], [640, 488],
-               [700, 460], [760, 492], [820, 466], [880, 478]];
-  const cg = ctx.createLinearGradient(0, 420, 0, 500);
-  cg.addColorStop(0, cliff[0]); cg.addColorStop(1, cliff[1]);
-  ctx.fillStyle = cg;
+// contorno orgánico de la meseta: bordes ondulados y falda festoneada abajo
+function plateauPath() {
   ctx.beginPath();
-  ctx.moveTo(-30, 400); ctx.lineTo(880, 400); ctx.lineTo(880, 450);
-  for (let i = jag.length - 1; i >= 0; i--) ctx.lineTo(jag[i][0], jag[i][1]);
-  ctx.closePath(); ctx.fill();
-  // grietas de la roca
-  ctx.strokeStyle = '#00000026'; ctx.lineWidth = 3; ctx.lineCap = 'round';
-  for (const x of [120, 300, 490, 680, 810]) {
-    ctx.beginPath(); ctx.moveTo(x, 440); ctx.lineTo(x - 8, 458); ctx.lineTo(x + 4, 472); ctx.stroke();
+  ctx.moveTo(-30, 100);
+  ctx.quadraticCurveTo(60, 58, 200, 66);
+  ctx.quadraticCurveTo(360, 74, 500, 64);
+  ctx.quadraticCurveTo(660, 56, 800, 68);
+  ctx.quadraticCurveTo(872, 74, 878, 130);
+  ctx.quadraticCurveTo(890, 240, 882, 350);
+  ctx.quadraticCurveTo(878, 412, 806, 424);
+  const xs = [806, 726, 646, 566, 486, 406, 326, 246, 166, 86, 6, -30];
+  for (let i = 1; i < xs.length; i++) {
+    ctx.quadraticCurveTo((xs[i - 1] + xs[i]) / 2, 448, xs[i], 424);
   }
+  ctx.lineTo(-30, 100);
+  ctx.closePath();
+}
+const CLIFF_CHUNKS = [];
+{
+  const xs = [-24, 78, 184, 290, 396, 502, 608, 714, 816, 884];
+  for (let i = 0; i < xs.length - 1; i++) {
+    CLIFF_CHUNKS.push({ a: xs[i], b: xs[i + 1], m: (xs[i] + xs[i + 1]) / 2, deep: i % 2 ? 486 : 510 });
+  }
+}
+function drawIsland(w) {
+  const cliff = (w.cliff && w.cliff.length === 4) ? w.cliff : ['#c98f5f', '#a5683c', '#7a4a28', '#5f3a1e'];
+  // rocas sueltas flotando bajo la isla
+  for (const [dx, dy, s] of [[140, 528, 11], [468, 522, 9], [762, 530, 12]]) {
+    ctx.fillStyle = cliff[1]; ctx.strokeStyle = cliff[3]; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(dx - s, dy); ctx.lineTo(dx - s * .4, dy - s * .8); ctx.lineTo(dx + s * .5, dy - s * .7);
+    ctx.lineTo(dx + s, dy + s * .1); ctx.lineTo(dx + s * .2, dy + s * .8); ctx.lineTo(dx - s * .6, dy + s * .6);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  // acantilado: bloques de roca individuales con contorno y grietas
+  ctx.lineJoin = 'round';
+  CLIFF_CHUNKS.forEach((c, i) => {
+    ctx.fillStyle = i % 2 ? cliff[1] : cliff[0];
+    ctx.strokeStyle = cliff[3]; ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(c.a - 4, 412);
+    ctx.lineTo(c.a + 8, c.deep - 22);
+    ctx.lineTo(c.m - 12, c.deep);
+    ctx.lineTo(c.m + 18, c.deep - 12);
+    ctx.lineTo(c.b - 6, c.deep - 30);
+    ctx.lineTo(c.b + 4, 412);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // grietas y vetas
+    ctx.strokeStyle = cliff[2]; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(c.m - 22, 438); ctx.lineTo(c.m - 28, 458); ctx.lineTo(c.m - 20, 472);
+    ctx.moveTo(c.m + 16, 442); ctx.lineTo(c.m + 22, 460);
+    ctx.moveTo(c.a + 18, 430); ctx.lineTo(c.a + 40, 434);
+    ctx.stroke();
+  });
+  // falda de pasto en sombra (asoma bajo la meseta)
+  ctx.save(); ctx.translate(0, 9);
+  ctx.fillStyle = w.groundDark || '#00000030';
+  plateauPath(); ctx.fill();
+  ctx.restore();
   // meseta de pasto
   ctx.fillStyle = w.ground;
-  roundRect(-30, 62, 910, 372, 60); ctx.fill();
+  plateauPath(); ctx.fill();
   const gl = ctx.createLinearGradient(0, 62, 0, 310);
   gl.addColorStop(0, '#ffffff30'); gl.addColorStop(1, '#ffffff00');
   ctx.fillStyle = gl;
-  roundRect(-30, 62, 910, 372, 60); ctx.fill();
-  // borde iluminado de la isla
-  ctx.globalAlpha = 0.85;
+  plateauPath(); ctx.fill();
+  // borde iluminado
+  ctx.globalAlpha = 0.9;
   ctx.strokeStyle = '#f7ffb8'; ctx.lineWidth = 5;
-  roundRect(-27, 65, 904, 366, 57); ctx.stroke();
+  plateauPath(); ctx.stroke();
   ctx.globalAlpha = 1;
+  // matitas de pasto
+  ctx.strokeStyle = w.groundDark || '#00000022'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  for (const [gx, gy] of [[250, 162], [610, 152], [420, 192], [720, 302], [300, 322],
+                          [550, 302], [820, 182], [120, 182], [660, 332], [210, 302]]) {
+    ctx.beginPath();
+    ctx.moveTo(gx - 4, gy + 4); ctx.quadraticCurveTo(gx - 5, gy - 4, gx - 7, gy - 6);
+    ctx.moveTo(gx, gy + 4); ctx.lineTo(gx, gy - 7);
+    ctx.moveTo(gx + 4, gy + 4); ctx.quadraticCurveTo(gx + 5, gy - 4, gx + 7, gy - 6);
+    ctx.stroke();
+  }
 }
 
 function draw() {
