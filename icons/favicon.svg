@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#16a34a"/>
+  <!-- manzana -->
+  <circle cx="217" cy="300" r="105" fill="#ffffff"/>
+  <circle cx="300" cy="300" r="105" fill="#ffffff"/>
+  <rect x="248" y="150" width="18" height="60" rx="9" fill="#ffffff"/>
+  <path d="M266 178 q10 -46 66 -50 q-6 50 -66 50 z" fill="#bbf7d0"/>
+</svg>

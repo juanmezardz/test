@@ -1,0 +1,257 @@
+/* DietaPlan — estilos */
+:root {
+  --brand: #16a34a;
+  --brand-strong: #15803d;
+  --brand-soft: #dcfce7;
+  --chart-series: #2a78d6;      /* serie de datos (validada CVD/contraste) */
+  --chart-ref: #8a8a86;         /* línea de referencia neutra */
+  --bg: #f4f6f4;
+  --surface: #ffffff;
+  --ink: #1c2420;
+  --ink-2: #55605a;
+  --ink-3: #8b948f;
+  --line: #e4e8e5;
+  --danger: #dc2626;
+  --protein: #2a78d6;
+  --carbs: #b26e12;
+  --fat: #7a67ee;
+  --radius: 16px;
+  --shadow: 0 1px 3px rgba(20, 30, 24, .08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand: #34c46b;
+    --brand-strong: #4ade80;
+    --brand-soft: #123822;
+    --chart-series: #3987e5;
+    --chart-ref: #7d7d79;
+    --bg: #111813;
+    --surface: #1b241e;
+    --ink: #e8ede9;
+    --ink-2: #a6b0aa;
+    --ink-3: #737d77;
+    --line: #2a352e;
+    --shadow: none;
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg); color: var(--ink);
+  min-height: 100dvh;
+}
+.hidden { display: none !important; }
+.muted { color: var(--ink-2); }
+.small { font-size: .8rem; }
+button { font: inherit; color: inherit; cursor: pointer; background: none; border: none; }
+input, select {
+  font: inherit; color: var(--ink);
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 12px; width: 100%;
+}
+input:focus, select:focus { outline: 2px solid var(--brand); border-color: transparent; }
+
+/* ---------- Onboarding ---------- */
+.onboarding {
+  max-width: 480px; margin: 0 auto; padding: 20px;
+  min-height: 100dvh; display: flex; flex-direction: column; gap: 16px;
+}
+.ob-progress { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.ob-progress-bar { height: 100%; width: 10%; background: var(--brand); border-radius: 3px; transition: width .3s; }
+.ob-step { display: flex; flex-direction: column; gap: 14px; flex: 1; }
+.ob-step h2 { font-size: 1.35rem; }
+.ob-hero { text-align: center; margin: auto 0; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.ob-hero h1 { font-size: 2rem; color: var(--brand); }
+.ob-hero p { color: var(--ink-2); }
+.ob-result-ring { font-size: 2.6rem; font-weight: 800; color: var(--brand); }
+.ob-result-ring small { display: block; font-size: 1rem; font-weight: 500; color: var(--ink-2); }
+.ob-macros { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.ob-macros span { background: var(--surface); border: 1px solid var(--line); padding: 8px 14px; border-radius: 999px; font-size: .9rem; }
+
+.choice-list { display: flex; flex-direction: column; gap: 10px; }
+.choice-row { flex-direction: row; }
+.choice-row .choice { flex: 1; justify-content: center; }
+.choice {
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  background: var(--surface); border: 2px solid var(--line);
+  border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow);
+}
+.choice small { display: block; color: var(--ink-2); }
+.choice-emoji { font-size: 1.5rem; }
+.choice.selected { border-color: var(--brand); background: var(--brand-soft); }
+
+.field { display: flex; flex-direction: column; gap: 6px; font-size: .9rem; color: var(--ink-2); }
+.field input, .field select { color: var(--ink); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.btn {
+  border: 1px solid var(--line); background: var(--surface);
+  border-radius: 12px; padding: 12px 18px; font-weight: 600;
+}
+.btn-primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+.btn-primary:active { background: var(--brand-strong); }
+.btn-block { width: 100%; }
+.btn-small { padding: 6px 12px; font-size: .85rem; border-radius: 999px; }
+.btn-danger { color: var(--danger); border-color: var(--danger); }
+
+/* ---------- Estructura app ---------- */
+.app { max-width: 520px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top));
+  position: sticky; top: 0; background: var(--bg); z-index: 5;
+}
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 800; color: var(--brand); }
+.date-nav { display: flex; align-items: center; gap: 4px; }
+.date-label { font-weight: 600; padding: 6px 10px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+.icon-btn {
+  width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+  background: var(--surface); border: 1px solid var(--line); font-size: 1.1rem; line-height: 1;
+}
+
+main { flex: 1; padding: 0 16px 96px; display: flex; flex-direction: column; gap: 14px; }
+.tab { display: flex; flex-direction: column; gap: 14px; }
+.card {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 16px; box-shadow: var(--shadow); border: 1px solid var(--line);
+}
+.card h3 { font-size: 1rem; }
+
+/* ---------- Anillo de calorías ---------- */
+.kcal-card { display: flex; align-items: center; gap: 18px; }
+.kcal-ring-wrap { position: relative; width: 150px; flex-shrink: 0; }
+.kcal-ring-wrap svg { width: 100%; height: auto; display: block; }
+.kcal-center {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+}
+.kcal-center strong { font-size: 1.7rem; letter-spacing: -.5px; }
+.kcal-center span { font-size: .75rem; color: var(--ink-2); }
+.kcal-side { display: flex; flex-direction: column; gap: 14px; }
+.kcal-stat { display: flex; align-items: center; gap: 10px; }
+.kcal-stat small { display: block; color: var(--ink-2); font-size: .75rem; }
+.kcal-stat strong { font-size: 1.05rem; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.dot-goal { background: var(--line); }
+.dot-food { background: var(--brand); }
+
+/* ---------- Macros ---------- */
+.macros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.macro { display: flex; flex-direction: column; gap: 6px; }
+.macro-name { font-size: .8rem; color: var(--ink-2); }
+.macro-val { font-size: .85rem; font-weight: 600; }
+.macro-track { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+.macro-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+
+/* ---------- Agua ---------- */
+.water-head { display: flex; justify-content: space-between; align-items: center; }
+.water-head small { display: block; color: var(--ink-2); }
+.water-controls { display: flex; gap: 8px; }
+.water-glasses { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.water-glass { font-size: 1.3rem; opacity: .25; }
+.water-glass.full { opacity: 1; }
+
+/* ---------- Comidas ---------- */
+.meal-card { margin-bottom: 14px; }
+.meal-head { display: flex; justify-content: space-between; align-items: center; }
+.meal-head small { color: var(--ink-2); }
+.meal-items { margin-top: 10px; display: flex; flex-direction: column; }
+.meal-item {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 8px 0; border-top: 1px solid var(--line);
+}
+.meal-item-name { font-size: .92rem; }
+.meal-item-name small { display: block; color: var(--ink-3); font-size: .75rem; }
+.meal-item-kcal { font-weight: 600; font-size: .9rem; white-space: nowrap; }
+.meal-item .del { color: var(--ink-3); padding: 4px 8px; font-size: 1rem; }
+.meal-empty { color: var(--ink-3); font-size: .85rem; padding: 8px 0; border-top: 1px solid var(--line); margin-top: 10px; }
+
+/* ---------- Navegación inferior ---------- */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 520px;
+  display: flex; align-items: center; justify-content: space-around;
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); z-index: 10;
+}
+.nav-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  font-size: .72rem; color: var(--ink-3); padding: 4px 14px; border-radius: 10px;
+}
+.nav-btn span { font-size: 1.25rem; }
+.nav-btn.active { color: var(--brand); font-weight: 600; }
+.nav-fab {
+  width: 54px; height: 54px; border-radius: 50%; background: var(--brand);
+  color: #fff; font-size: 1.9rem; line-height: 1; display: grid; place-items: center;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, .4); margin-top: -22px;
+}
+
+/* ---------- Hojas (bottom sheets) ---------- */
+.sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 20; }
+.sheet {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 520px; max-height: 88dvh; overflow-y: auto;
+  background: var(--surface); border-radius: 20px 20px 0 0;
+  padding: 8px 16px calc(20px + env(safe-area-inset-bottom)); z-index: 21;
+  display: flex; flex-direction: column; gap: 12px;
+  animation: sheet-up .22s ease-out;
+}
+@keyframes sheet-up { from { transform: translate(-50%, 30%); opacity: .4; } to { transform: translate(-50%, 0); opacity: 1; } }
+.sheet-handle { width: 42px; height: 4px; border-radius: 2px; background: var(--line); margin: 4px auto 0; flex-shrink: 0; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sheet-view { display: flex; flex-direction: column; gap: 12px; }
+.search-input { background: var(--bg); }
+
+.meal-picker { display: flex; gap: 6px; flex-wrap: wrap; }
+.meal-chip {
+  padding: 6px 12px; border-radius: 999px; font-size: .82rem;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink-2);
+}
+.meal-chip.selected { background: var(--brand-soft); border-color: var(--brand); color: var(--ink); font-weight: 600; }
+
+.food-results { display: flex; flex-direction: column; max-height: 42dvh; overflow-y: auto; }
+.food-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: 10px 4px; border-bottom: 1px solid var(--line); text-align: left; width: 100%;
+}
+.food-row-name { font-size: .95rem; }
+.food-row-name small { display: block; color: var(--ink-3); font-size: .75rem; }
+.food-row-kcal { color: var(--ink-2); font-size: .85rem; white-space: nowrap; }
+.food-none { color: var(--ink-3); text-align: center; padding: 16px 0; }
+
+.qty-row { display: flex; flex-direction: column; gap: 8px; }
+.qty-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.detail-macros { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; }
+.detail-macros div { background: var(--bg); border-radius: 10px; padding: 10px 4px; }
+.detail-macros strong { display: block; font-size: 1rem; }
+.detail-macros small { color: var(--ink-2); font-size: .72rem; }
+
+/* ---------- Progreso / gráficas ---------- */
+.chart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.chart-wrap svg { width: 100%; height: auto; display: block; }
+.chart-empty { color: var(--ink-3); font-size: .88rem; text-align: center; padding: 24px 0; }
+.chart-tooltip {
+  position: fixed; z-index: 30; pointer-events: none;
+  background: var(--ink); color: var(--bg);
+  padding: 6px 10px; border-radius: 8px; font-size: .78rem;
+  transform: translate(-50%, calc(-100% - 10px)); white-space: nowrap;
+}
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat-tile { background: var(--bg); border-radius: 12px; padding: 12px; text-align: center; }
+.stat-tile strong { display: block; font-size: 1.2rem; }
+.stat-tile small { color: var(--ink-2); font-size: .72rem; }
+
+/* ---------- Perfil ---------- */
+.profile-form { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+#tab-profile .card { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed; bottom: 96px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: var(--bg); padding: 10px 18px;
+  border-radius: 999px; font-size: .85rem; z-index: 40;
+  animation: toast-in .2s ease-out;
+}
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }

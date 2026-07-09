@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#16a34a" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111813" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="Contador de calorías y planificador de dieta. Registra tus comidas, agua y peso. Funciona sin conexión.">
+  <title>DietaPlan · Contador de Calorías</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="DietaPlan">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- ============ ONBOARDING ============ -->
+  <section id="onboarding" class="onboarding hidden" aria-label="Configuración inicial">
+    <div class="ob-progress"><div class="ob-progress-bar" id="obProgressBar"></div></div>
+
+    <div class="ob-step" data-step="0">
+      <div class="ob-hero">
+        <img src="icons/favicon.svg" alt="" width="88" height="88">
+        <h1>DietaPlan</h1>
+        <p>Tu contador de calorías y planificador de dieta. Responde unas preguntas para calcular tu plan personalizado.</p>
+      </div>
+      <button class="btn btn-primary btn-block" data-ob-next>Empezar</button>
+    </div>
+
+    <div class="ob-step hidden" data-step="1">
+      <h2>¿Cuál es tu objetivo?</h2>
+      <div class="choice-list" id="obGoal">
+        <button class="choice" data-value="lose"><span class="choice-emoji">📉</span><span><strong>Perder peso</strong><small>Déficit calórico moderado</small></span></button>
+        <button class="choice" data-value="maintain"><span class="choice-emoji">⚖️</span><span><strong>Mantener peso</strong><small>Comer según tu gasto</small></span></button>
+        <button class="choice" data-value="gain"><span class="choice-emoji">📈</span><span><strong>Ganar músculo</strong><small>Superávit calórico ligero</small></span></button>
+      </div>
+    </div>
+
+    <div class="ob-step hidden" data-step="2">
+      <h2>Sobre ti</h2>
+      <div class="choice-list choice-row" id="obSex">
+        <button class="choice" data-value="female"><span class="choice-emoji">👩</span><span><strong>Mujer</strong></span></button>
+        <button class="choice" data-value="male"><span class="choice-emoji">👨</span><span><strong>Hombre</strong></span></button>
+      </div>
+      <label class="field"><span>Edad</span><input type="number" id="obAge" min="14" max="99" inputmode="numeric" placeholder="p. ej. 28"></label>
+      <label class="field"><span>Altura (cm)</span><input type="number" id="obHeight" min="120" max="230" inputmode="numeric" placeholder="p. ej. 170"></label>
+      <label class="field"><span>Peso actual (kg)</span><input type="number" id="obWeight" min="30" max="300" step="0.1" inputmode="decimal" placeholder="p. ej. 72.5"></label>
+      <button class="btn btn-primary btn-block" data-ob-next>Continuar</button>
+    </div>
+
+    <div class="ob-step hidden" data-step="3">
+      <h2>¿Cuánta actividad haces?</h2>
+      <div class="choice-list" id="obActivity">
+        <button class="choice" data-value="1.2"><span class="choice-emoji">🪑</span><span><strong>Sedentario</strong><small>Poco o ningún ejercicio</small></span></button>
+        <button class="choice" data-value="1.375"><span class="choice-emoji">🚶</span><span><strong>Ligero</strong><small>Ejercicio 1–3 días/semana</small></span></button>
+        <button class="choice" data-value="1.55"><span class="choice-emoji">🏃</span><span><strong>Moderado</strong><small>Ejercicio 3–5 días/semana</small></span></button>
+        <button class="choice" data-value="1.725"><span class="choice-emoji">🏋️</span><span><strong>Intenso</strong><small>Ejercicio 6–7 días/semana</small></span></button>
+      </div>
+    </div>
+
+    <div class="ob-step hidden" data-step="4">
+      <div class="ob-hero">
+        <div class="ob-result-ring" id="obResultRing"></div>
+        <h2>Tu plan diario</h2>
+        <div class="ob-macros" id="obMacros"></div>
+        <p class="muted">Podrás ajustarlo cuando quieras desde tu perfil.</p>
+      </div>
+      <button class="btn btn-primary btn-block" id="obFinish">¡Comenzar a registrar!</button>
+    </div>
+  </section>
+
+  <!-- ============ APP ============ -->
+  <div id="app" class="app hidden">
+    <header class="topbar">
+      <div class="brand"><img src="icons/favicon.svg" alt="" width="28" height="28"><span>DietaPlan</span></div>
+      <div class="date-nav" id="dateNav">
+        <button class="icon-btn" id="datePrev" aria-label="Día anterior">‹</button>
+        <button class="date-label" id="dateLabel"></button>
+        <button class="icon-btn" id="dateNext" aria-label="Día siguiente">›</button>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- ===== HOY ===== -->
+      <section class="tab" id="tab-today">
+        <div class="card kcal-card">
+          <div class="kcal-ring-wrap">
+            <svg id="kcalRing" viewBox="0 0 200 200" role="img" aria-label="Calorías del día"></svg>
+            <div class="kcal-center">
+              <strong id="kcalRemaining">0</strong>
+              <span id="kcalRemainingLabel">restantes</span>
+            </div>
+          </div>
+          <div class="kcal-side">
+            <div class="kcal-stat"><span class="dot dot-goal"></span><div><small>Objetivo</small><strong id="kcalGoal">0</strong></div></div>
+            <div class="kcal-stat"><span class="dot dot-food"></span><div><small>Consumidas</small><strong id="kcalEaten">0</strong></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="macros" id="macroBars"></div>
+        </div>
+
+        <div class="card water-card">
+          <div class="water-head">
+            <div><strong>💧 Agua</strong><small id="waterLabel"></small></div>
+            <div class="water-controls">
+              <button class="icon-btn" id="waterMinus" aria-label="Quitar vaso">−</button>
+              <button class="icon-btn" id="waterPlus" aria-label="Añadir vaso">+</button>
+            </div>
+          </div>
+          <div class="water-glasses" id="waterGlasses"></div>
+        </div>
+
+        <div id="mealList"></div>
+      </section>
+
+      <!-- ===== PROGRESO ===== -->
+      <section class="tab hidden" id="tab-progress">
+        <div class="card">
+          <div class="chart-head">
+            <h3>Peso corporal</h3>
+            <button class="btn btn-small" id="addWeightBtn">+ Registrar peso</button>
+          </div>
+          <div class="chart-wrap" id="weightChart"></div>
+        </div>
+        <div class="card">
+          <div class="chart-head"><h3>Calorías · últimos 7 días</h3></div>
+          <div class="chart-wrap" id="kcalChart"></div>
+        </div>
+        <div class="card">
+          <div class="chart-head"><h3>Resumen</h3></div>
+          <div class="stat-row" id="statRow"></div>
+        </div>
+      </section>
+
+      <!-- ===== PERFIL ===== -->
+      <section class="tab hidden" id="tab-profile">
+        <div class="card">
+          <h3>Mis datos</h3>
+          <form id="profileForm" class="profile-form">
+            <label class="field"><span>Sexo</span>
+              <select id="pfSex"><option value="female">Mujer</option><option value="male">Hombre</option></select>
+            </label>
+            <label class="field"><span>Edad</span><input type="number" id="pfAge" min="14" max="99"></label>
+            <label class="field"><span>Altura (cm)</span><input type="number" id="pfHeight" min="120" max="230"></label>
+            <label class="field"><span>Peso (kg)</span><input type="number" id="pfWeight" min="30" max="300" step="0.1"></label>
+            <label class="field"><span>Actividad</span>
+              <select id="pfActivity">
+                <option value="1.2">Sedentario</option><option value="1.375">Ligero</option>
+                <option value="1.55">Moderado</option><option value="1.725">Intenso</option>
+              </select>
+            </label>
+            <label class="field"><span>Objetivo</span>
+              <select id="pfGoal"><option value="lose">Perder peso</option><option value="maintain">Mantener</option><option value="gain">Ganar músculo</option></select>
+            </label>
+            <button type="submit" class="btn btn-primary btn-block">Recalcular plan</button>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Ajuste manual</h3>
+          <label class="field"><span>Calorías diarias (kcal)</span><input type="number" id="pfKcal" min="800" max="6000"></label>
+          <button class="btn btn-block" id="saveKcalBtn">Guardar calorías</button>
+        </div>
+        <div class="card">
+          <h3>Aplicación</h3>
+          <button class="btn btn-block hidden" id="installBtn">📲 Instalar en el dispositivo</button>
+          <button class="btn btn-block" id="exportBtn">⬇️ Exportar mis datos (JSON)</button>
+          <button class="btn btn-block btn-danger" id="resetBtn">🗑️ Borrar todos los datos</button>
+          <p class="muted small">Tus datos se guardan solo en este dispositivo. La app funciona sin conexión.</p>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-tab="today"><span>🏠</span>Hoy</button>
+      <button class="nav-fab" id="fabAdd" aria-label="Añadir alimento">+</button>
+      <button class="nav-btn" data-tab="progress"><span>📊</span>Progreso</button>
+      <button class="nav-btn" data-tab="profile"><span>👤</span>Perfil</button>
+    </nav>
+  </div>
+
+  <!-- ============ HOJA: AÑADIR ALIMENTO ============ -->
+  <div class="sheet-backdrop hidden" id="sheetBackdrop"></div>
+  <section class="sheet hidden" id="foodSheet" role="dialog" aria-label="Añadir alimento">
+    <div class="sheet-handle"></div>
+    <div class="sheet-view" id="foodSearchView">
+      <div class="sheet-head">
+        <h3 id="foodSheetTitle">Añadir alimento</h3>
+        <button class="icon-btn" id="closeSheet" aria-label="Cerrar">✕</button>
+      </div>
+      <input type="search" id="foodSearch" class="search-input" placeholder="Buscar alimento… (p. ej. pollo, arroz)" autocomplete="off">
+      <div class="meal-picker" id="mealPicker"></div>
+      <div class="food-results" id="foodResults"></div>
+      <button class="btn btn-block" id="newFoodBtn">＋ Crear alimento propio</button>
+    </div>
+
+    <div class="sheet-view hidden" id="foodDetailView">
+      <div class="sheet-head">
+        <button class="icon-btn" id="backToSearch" aria-label="Volver">‹</button>
+        <h3 id="detailName">Alimento</h3>
+        <span></span>
+      </div>
+      <div class="qty-row">
+        <label class="field"><span id="qtyLabel">Cantidad (g)</span>
+          <input type="number" id="detailQty" min="1" max="5000" value="100" inputmode="decimal">
+        </label>
+        <div class="qty-chips" id="qtyChips"></div>
+      </div>
+      <div class="detail-macros" id="detailMacros"></div>
+      <button class="btn btn-primary btn-block" id="confirmAdd">Añadir</button>
+    </div>
+
+    <div class="sheet-view hidden" id="customFoodView">
+      <div class="sheet-head">
+        <button class="icon-btn" id="backFromCustom" aria-label="Volver">‹</button>
+        <h3>Crear alimento</h3>
+        <span></span>
+      </div>
+      <form id="customFoodForm">
+        <label class="field"><span>Nombre</span><input type="text" id="cfName" required maxlength="60" placeholder="p. ej. Mi batido"></label>
+        <p class="muted small">Valores por 100 g:</p>
+        <div class="grid-2">
+          <label class="field"><span>Calorías</span><input type="number" id="cfKcal" required min="0" max="900" inputmode="decimal"></label>
+          <label class="field"><span>Proteínas (g)</span><input type="number" id="cfProtein" min="0" max="100" step="0.1" value="0" inputmode="decimal"></label>
+          <label class="field"><span>Carbohidratos (g)</span><input type="number" id="cfCarbs" min="0" max="100" step="0.1" value="0" inputmode="decimal"></label>
+          <label class="field"><span>Grasas (g)</span><input type="number" id="cfFat" min="0" max="100" step="0.1" value="0" inputmode="decimal"></label>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Guardar alimento</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ HOJA: PESO ============ -->
+  <section class="sheet hidden" id="weightSheet" role="dialog" aria-label="Registrar peso">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h3>Registrar peso</h3>
+      <button class="icon-btn" id="closeWeightSheet" aria-label="Cerrar">✕</button>
+    </div>
+    <label class="field"><span>Peso de hoy (kg)</span>
+      <input type="number" id="weightInput" min="30" max="300" step="0.1" inputmode="decimal">
+    </label>
+    <button class="btn btn-primary btn-block" id="saveWeightBtn">Guardar</button>
+  </section>
+
+  <div class="chart-tooltip hidden" id="chartTooltip" role="status"></div>
+  <div class="toast hidden" id="toast" role="status"></div>
+
+  <script src="js/foods.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
