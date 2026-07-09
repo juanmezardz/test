@@ -1,5 +1,5 @@
 /* DietaPlan — service worker: app shell en caché, funciona sin conexión */
-const CACHE = "dietaplan-v1";
+const CACHE = "dietaplan-v2";
 const ASSETS = [
   "./",
   "./index.html",

@@ -7,6 +7,7 @@ Aplicación web instalable (PWA) para contar calorías y planificar tu dieta, in
 - **Onboarding personalizado**: sexo, edad, altura, peso, actividad y objetivo (perder / mantener / ganar). Calcula tus calorías diarias con la fórmula Mifflin-St Jeor y reparte macros (proteínas, carbohidratos y grasas).
 - **Diario de comidas**: desayuno, almuerzo, cena y snacks, con navegación por días.
 - **Base de datos de alimentos** en español (más de 100 alimentos con calorías y macros por 100 g y porciones habituales), búsqueda instantánea, alimentos recientes y creación de alimentos propios.
+- **📷 Análisis de fotos con IA**: toma una foto de tu plato y la app identifica los alimentos, estima las porciones y calcula calorías y macros automáticamente (usa la API de Claude; requiere una clave de API de Anthropic que se guarda solo en tu dispositivo). Puedes revisar y quitar alimentos antes de añadirlos al diario.
 - **Anillo de calorías** con restantes/consumidas y barras de progreso de macros.
 - **Registro de agua** por vasos, con meta calculada según tu peso.
 - **Progreso**: gráfica de evolución del peso, calorías de los últimos 7 días frente a tu objetivo, cambio de peso, media semanal y racha de días.

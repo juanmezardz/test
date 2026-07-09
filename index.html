@@ -165,6 +165,12 @@
           <button class="btn btn-block" id="saveKcalBtn">Guardar calorías</button>
         </div>
         <div class="card">
+          <h3>Análisis de fotos (IA)</h3>
+          <p class="muted small" id="aiKeyStatus">Sin clave de API configurada.</p>
+          <button class="btn btn-block btn-danger hidden" id="clearApiKeyBtn">Quitar clave de API</button>
+          <p class="muted small">La foto se envía a la API de Claude solo cuando pulsas "Analizar". Tu clave se guarda únicamente en este dispositivo.</p>
+        </div>
+        <div class="card">
           <h3>Aplicación</h3>
           <button class="btn btn-block hidden" id="installBtn">📲 Instalar en el dispositivo</button>
           <button class="btn btn-block" id="exportBtn">⬇️ Exportar mis datos (JSON)</button>
@@ -193,8 +199,37 @@
       </div>
       <input type="search" id="foodSearch" class="search-input" placeholder="Buscar alimento… (p. ej. pollo, arroz)" autocomplete="off">
       <div class="meal-picker" id="mealPicker"></div>
+      <button class="btn btn-block btn-ai" id="photoBtn">📷 Analizar plato con foto (IA)</button>
       <div class="food-results" id="foodResults"></div>
       <button class="btn btn-block" id="newFoodBtn">＋ Crear alimento propio</button>
+    </div>
+
+    <div class="sheet-view hidden" id="photoView">
+      <div class="sheet-head">
+        <button class="icon-btn" id="backFromPhoto" aria-label="Volver">‹</button>
+        <h3>Foto del plato</h3>
+        <span></span>
+      </div>
+      <div id="photoKeySetup" class="hidden">
+        <p class="muted small">Para analizar fotos, la app usa la API de Claude. Pega tu clave de API (se guarda solo en este dispositivo). Consíguela en <strong>platform.claude.com</strong>.</p>
+        <label class="field"><span>Clave de API de Anthropic</span>
+          <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off">
+        </label>
+        <button class="btn btn-primary btn-block" id="saveApiKeyBtn">Guardar clave</button>
+      </div>
+      <div id="photoCapture">
+        <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+        <button class="btn btn-block" id="takePhotoBtn">📸 Tomar o elegir foto</button>
+        <img id="photoPreview" class="photo-preview hidden" alt="Foto del plato">
+        <button class="btn btn-primary btn-block hidden" id="analyzeBtn">✨ Analizar con IA</button>
+        <div class="photo-status hidden" id="photoStatus"></div>
+      </div>
+      <div id="photoResults" class="hidden">
+        <p class="muted small" id="photoComment"></p>
+        <div class="food-results" id="photoFoodList"></div>
+        <button class="btn btn-primary btn-block" id="addPhotoFoods">Añadir todo</button>
+        <button class="btn btn-block" id="retryPhoto">Analizar otra foto</button>
+      </div>
     </div>
 
     <div class="sheet-view hidden" id="foodDetailView">

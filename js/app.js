@@ -538,8 +538,208 @@ function bindProfile() {
   $("#resetBtn").addEventListener("click", () => {
     if (!confirm("¿Borrar todos tus datos? Esta acción no se puede deshacer.")) return;
     localStorage.removeItem(STORE_KEY);
+    localStorage.removeItem(API_KEY_STORE);
     location.reload();
   });
+}
+
+// ---------- Foto IA (API de Claude) ----------
+const API_KEY_STORE = "dietaplan.apikey";
+let photoImage = null;   // { data (base64 sin prefijo), mediaType }
+let photoFoods = [];
+
+function getApiKey() { return localStorage.getItem(API_KEY_STORE) || ""; }
+
+const PHOTO_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    foods: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          name: { type: "string", description: "Nombre del alimento en español" },
+          grams: { type: "number", description: "Peso estimado de la porción en gramos" },
+          kcal: { type: "number", description: "Calorías totales de esa porción" },
+          protein: { type: "number", description: "Proteínas totales en gramos" },
+          carbs: { type: "number", description: "Carbohidratos totales en gramos" },
+          fat: { type: "number", description: "Grasas totales en gramos" },
+        },
+        required: ["name", "grams", "kcal", "protein", "carbs", "fat"],
+      },
+    },
+    comment: { type: "string", description: "Comentario breve sobre el plato o aviso si no se ve comida" },
+  },
+  required: ["foods", "comment"],
+};
+
+function openPhotoView() {
+  showSheetView("photoView");
+  photoImage = null;
+  photoFoods = [];
+  $("#photoPreview").classList.add("hidden");
+  $("#analyzeBtn").classList.add("hidden");
+  $("#photoStatus").classList.add("hidden");
+  $("#photoResults").classList.add("hidden");
+  const hasKey = !!getApiKey();
+  $("#photoKeySetup").classList.toggle("hidden", hasKey);
+  $("#photoCapture").classList.toggle("hidden", !hasKey);
+}
+
+// Reduce la imagen (máx. 1024 px) y devuelve base64 JPEG para abaratar el análisis
+function preparePhoto(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX = 1024;
+      const k = Math.min(1, MAX / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * k);
+      canvas.height = Math.round(img.height * k);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+      resolve({ data: dataUrl.split(",")[1], mediaType: "image/jpeg", dataUrl });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("No se pudo leer la imagen")); };
+    img.src = url;
+  });
+}
+
+async function analyzePhoto() {
+  if (!photoImage) return;
+  const status = $("#photoStatus");
+  status.classList.remove("hidden");
+  status.innerHTML = `<span class="spinner"></span><br>Analizando tu plato…`;
+  $("#analyzeBtn").disabled = true;
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": getApiKey(),
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: "claude-opus-4-8",
+        max_tokens: 2000,
+        output_config: { format: { type: "json_schema", schema: PHOTO_SCHEMA } },
+        messages: [{
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: photoImage.mediaType, data: photoImage.data } },
+            { type: "text", text: "Analiza esta foto de un plato de comida. Identifica cada alimento visible, estima el peso de su porción en gramos y calcula sus valores nutricionales TOTALES para esa porción (kcal, proteínas, carbohidratos y grasas en gramos). Usa nombres en español. Si la imagen no muestra comida, devuelve foods vacío y explícalo en comment." },
+          ],
+        }],
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      const msg = err?.error?.message || `Error ${res.status}`;
+      if (res.status === 401) throw new Error("Clave de API no válida. Revísala en Perfil.");
+      throw new Error(msg);
+    }
+    const data = await res.json();
+    if (data.stop_reason === "refusal") throw new Error("La IA no pudo procesar esta imagen.");
+    const text = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("");
+    const parsed = JSON.parse(text);
+    photoFoods = (parsed.foods || []).filter((f) => f.name && f.kcal >= 0);
+    renderPhotoResults(parsed.comment || "");
+  } catch (e) {
+    status.innerHTML = `⚠️ ${esc(e.message || "No se pudo analizar la foto")}`;
+  } finally {
+    $("#analyzeBtn").disabled = false;
+  }
+}
+
+function renderPhotoResults(comment) {
+  $("#photoStatus").classList.add("hidden");
+  $("#photoCapture").classList.add("hidden");
+  $("#photoResults").classList.remove("hidden");
+  $("#photoComment").textContent = comment;
+  if (!photoFoods.length) {
+    $("#photoFoodList").innerHTML = `<div class="food-none">No se detectaron alimentos en la foto.</div>`;
+    $("#addPhotoFoods").classList.add("hidden");
+    return;
+  }
+  const total = Math.round(photoFoods.reduce((s, f) => s + f.kcal, 0));
+  $("#addPhotoFoods").classList.remove("hidden");
+  $("#addPhotoFoods").textContent = `Añadir todo (${total} kcal)`;
+  $("#photoFoodList").innerHTML = photoFoods.map((f, i) => `
+    <div class="food-row">
+      <div class="food-row-name">${esc(f.name)}<small>≈ ${Math.round(f.grams)} g · P ${f.protein.toFixed(0)} · C ${f.carbs.toFixed(0)} · G ${f.fat.toFixed(0)}</small></div>
+      <span class="food-row-kcal">${Math.round(f.kcal)} kcal</span>
+      <button class="del" data-photo-idx="${i}" aria-label="Quitar ${esc(f.name)}">✕</button>
+    </div>`).join("");
+}
+
+function bindPhoto() {
+  $("#photoBtn").addEventListener("click", openPhotoView);
+  $("#backFromPhoto").addEventListener("click", () => showSheetView("foodSearchView"));
+  $("#saveApiKeyBtn").addEventListener("click", () => {
+    const key = $("#apiKeyInput").value.trim();
+    if (!key.startsWith("sk-ant-")) return toast("La clave debe empezar por sk-ant-");
+    localStorage.setItem(API_KEY_STORE, key);
+    $("#apiKeyInput").value = "";
+    openPhotoView();
+    toast("Clave guardada ✓");
+  });
+  $("#takePhotoBtn").addEventListener("click", () => $("#photoInput").click());
+  $("#photoInput").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      photoImage = await preparePhoto(file);
+      $("#photoPreview").src = photoImage.dataUrl;
+      $("#photoPreview").classList.remove("hidden");
+      $("#analyzeBtn").classList.remove("hidden");
+      $("#photoStatus").classList.add("hidden");
+    } catch (err) {
+      toast(err.message);
+    }
+    e.target.value = "";
+  });
+  $("#analyzeBtn").addEventListener("click", analyzePhoto);
+  $("#photoFoodList").addEventListener("click", (e) => {
+    const del = e.target.closest("[data-photo-idx]");
+    if (!del) return;
+    photoFoods.splice(+del.dataset.photoIdx, 1);
+    renderPhotoResults($("#photoComment").textContent);
+  });
+  $("#addPhotoFoods").addEventListener("click", () => {
+    const day = getDay(currentDate);
+    for (const f of photoFoods) {
+      day.meals[sheetCtx.meal].push({
+        foodId: null, name: f.name, g: Math.round(f.grams),
+        qtyLabel: `≈ ${Math.round(f.grams)} g · foto IA`,
+        kcal: f.kcal, p: f.protein, c: f.carbs, f: f.fat,
+      });
+    }
+    save();
+    closeSheets();
+    renderToday();
+    toast(`${photoFoods.length} alimento${photoFoods.length > 1 ? "s" : ""} añadido${photoFoods.length > 1 ? "s" : ""} ✓`);
+  });
+  $("#retryPhoto").addEventListener("click", () => {
+    $("#photoResults").classList.add("hidden");
+    openPhotoView();
+  });
+  $("#clearApiKeyBtn").addEventListener("click", () => {
+    localStorage.removeItem(API_KEY_STORE);
+    renderApiKeyStatus();
+    toast("Clave eliminada");
+  });
+}
+function renderApiKeyStatus() {
+  const hasKey = !!getApiKey();
+  $("#aiKeyStatus").textContent = hasKey
+    ? "Clave de API configurada ✓ — el análisis de fotos está activo."
+    : "Sin clave de API configurada. Añádela al analizar tu primera foto.";
+  $("#clearApiKeyBtn").classList.toggle("hidden", !hasKey);
 }
 
 // ---------- Peso ----------
@@ -570,7 +770,7 @@ function switchTab(tab) {
   $$(".tab").forEach((t) => t.classList.toggle("hidden", t.id !== `tab-${tab}`));
   $("#dateNav").style.visibility = tab === "today" ? "visible" : "hidden";
   if (tab === "progress") renderProgress();
-  if (tab === "profile") renderProfile();
+  if (tab === "profile") { renderProfile(); renderApiKeyStatus(); }
   window.scrollTo({ top: 0 });
 }
 function bindNav() {
@@ -619,6 +819,7 @@ function init() {
   bindOnboarding();
   bindNav();
   bindFoodSheet();
+  bindPhoto();
   bindWeight();
   bindProfile();
   bindPWA();
