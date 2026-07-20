@@ -1722,6 +1722,14 @@ function endLevel(won) {
 }
 
 /* ================== ARRANQUE ================== */
+// si algo falla en un dispositivo, que se vea en pantalla en vez de quedarse en blanco
+window.addEventListener('error', ev => {
+  const t = document.getElementById('toast');
+  if (t) {
+    t.textContent = '⚠️ Algo falló: ' + (ev.message || 'error desconocido') + ' — intenta recargar';
+    t.classList.add('show');
+  }
+});
 // PWA: instalable y jugable sin internet cuando se sirve por https
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   window.addEventListener('load', () => {
