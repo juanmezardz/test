@@ -12,7 +12,8 @@ template, and **working reference builds of both screens** you can open in a bro
 | File | What it is |
 | --- | --- |
 | [`setup-interview.html`](setup-interview.html) | The setup interview, working standalone. Answers 11 questions, does the math, prints your finished project instructions with a copy button. |
-| [`tracker.html`](tracker.html) | The tracker dashboard, working standalone. Rings, water, 7-day history, diary, light/dark, backup codes. |
+| [`tracker.html`](tracker.html) | The tracker dashboard, working standalone. Rings, water, 7-day history, diary, light/dark, backup codes. Installable as a phone app — see [Install it on your phone](#install-it-on-your-phone). |
+| `manifest.webmanifest`, `sw.js`, `icon*.png` | What makes the tracker installable and offline-capable. |
 | [`prompts/setup-interview-prompt-full.txt`](prompts/setup-interview-prompt-full.txt) | The Step 2 prompt, ready to paste into Claude as-is. |
 | [`prompts/setup-interview-prompt.md`](prompts/setup-interview-prompt.md) | The same prompt, annotated. |
 | [`project-instructions-template.md`](project-instructions-template.md) | The block that goes in your project's instructions field, plus notes on the `EMBEDDED` data format. |
@@ -93,6 +94,36 @@ In that same chat, just talk to it:
 
 Claude reads what you logged, shows the breakdown, and updates the same dashboard each time.
 
+## Install it on your phone
+
+The tracker is a PWA, so it installs to your home screen and opens full screen with no browser
+chrome. Installing needs the files served over HTTPS — phones won't install from a file you open
+locally.
+
+### Put it online
+
+**GitHub Pages** — free, and the repo is already here:
+
+1. Repo → Settings → Pages.
+2. Source: *Deploy from a branch*. Branch: the branch holding these files, folder `/ (root)`. Save.
+3. Wait a minute, then open `https://<you>.github.io/<repo>/calorie-tracker/` on your phone.
+
+**Any static host** works the same way — Vercel, Netlify, Cloudflare Pages. Point it at this
+directory. There's nothing to build.
+
+### Then install
+
+- **Android / Chrome** — an "Install on your phone" card appears at the bottom of the tracker.
+  Tap Install. (Chrome's own menu has *Install app* too.)
+- **iPhone / Safari** — iOS has no install button, so the card tells you the move: tap Share, then
+  **Add to Home Screen**. It must be Safari; Chrome on iOS can't install.
+
+Once installed it opens full screen — the phone-frame mockup and fake status bar drop away, since
+you're now looking at a real one — and the service worker keeps it working with no signal.
+
+> Your log lives in that install's storage. Installing does **not** move data over from the browser
+> tab you were using, so copy your save code first and paste it into Restore in the installed app.
+
 ## Backup and restore
 
 Your data is saved in the browser you use. To protect it, open the Backup & Restore section at the
@@ -155,6 +186,21 @@ water taps, deletions, and anything added with the in-page **+ Add food** form.
 
 Today's date comes from JavaScript and is re-checked every 20 seconds, so the day rolls over on its
 own and past days stay in the 7-day chart. The save code is base64-encoded JSON of the whole state.
+
+### PWA bits
+
+`manifest.webmanifest` declares the app (standalone display, portrait, blue theme, `tracker.html` as
+the start URL). `sw.js` precaches the shell on install; pages are served network-first so a redeploy
+lands immediately, while icons and other assets are cache-first. Bump `CACHE` in `sw.js` when you
+change a shell file.
+
+All paths are relative, so the app works from any subdirectory — `/calorie-tracker/` on GitHub Pages
+or the root of its own host, no edits needed. The service worker sits out `file://` and embedded
+previews (it needs HTTP and a top-level page); everything else still works there.
+
+Icons are generated from `icon.svg` and `icon-maskable.svg`. The maskable variant is full-bleed with
+its artwork inside the 80% safe zone, so Android can crop it to whatever shape the launcher uses;
+`apple-touch-icon.png` is full-bleed too, because iOS fills transparent corners with black.
 
 ## Disclaimer
 

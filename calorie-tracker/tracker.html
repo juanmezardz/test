@@ -2,8 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Macro Tracker</title>
+<meta name="description" content="Personal calorie and macro tracker — calorie ring, macros, water, and a food diary.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2563EB" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B0B0F" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Macros">
 <style>
   :root{
     --accent:#2563EB; --accent2:#4F8BFF;
@@ -155,6 +165,26 @@
     border:1px solid var(--line);background:var(--card2);color:var(--ink);cursor:pointer;transition:all .18s}
   .panel .btns button:hover{border-color:var(--accent);color:var(--accent)}
   .hint{font-size:11.5px;color:var(--muted);margin:9px 0 0;line-height:1.5}
+
+  /* ---------- install prompt ---------- */
+  .install{display:flex;align-items:center;gap:12px}
+  .install .ic{width:38px;height:38px;border-radius:11px;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff}
+  .install .tx{flex:1;min-width:0}
+  .install .tx b{display:block;font-size:14px}
+  .install .tx span{font-size:11.5px;color:var(--muted);line-height:1.45;display:block;margin-top:2px}
+  .install button{font:inherit;font-size:13.5px;font-weight:600;padding:9px 14px;border-radius:11px;border:0;cursor:pointer;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;flex:0 0 auto}
+  .install .no{background:none;color:var(--muted);padding:9px 4px;font-weight:500}
+
+  /* ---------- installed (standalone) ---------- */
+  html.app-mode body{padding:0;align-items:stretch;background:var(--bg)}
+  html.app-mode .device{width:100%;max-width:none;padding:0;border-radius:0;box-shadow:none;background:var(--bg)}
+  html.app-mode .glass{border-radius:0;min-height:100vh}
+  html.app-mode .island,html.app-mode .statusbar{display:none}
+  html.app-mode .app{max-height:none;overflow:visible;max-width:480px;margin:0 auto;
+    padding-top:calc(env(safe-area-inset-top,0px) + 14px);
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 28px)}
 
   footer{text-align:center;font-size:10.5px;color:var(--muted);line-height:1.5;padding:4px 6px 2px}
   .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#0F172A;color:#fff;
@@ -551,6 +581,10 @@ function render(){
     state = s; lastKcal = 0; save(); toast('Restored'); render();
   };
 
+  /* install this as an app */
+  var promo = installPromo();
+  if (promo) app.appendChild(promo);
+
   app.appendChild(el('<footer>I’m an AI assistant, not a medical professional. Check with your primary care ' +
     'physician before starting any new diet.' +
     (state.plan.calculated ? '<br>Plan calculated ' + esc(state.plan.calculated) + '.' : '') + '</footer>'));
@@ -602,10 +636,88 @@ function copyText(text, cb){
   }
 }
 
+/* ---------------- install as an app ---------------- */
+var deferredPrompt = null, INSTALLKEY = 'macrotracker.installdismissed';
+
+function isStandalone(){
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+         window.navigator.standalone === true;
+}
+function isIOS(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function installDismissed(){
+  try { return localStorage.getItem(INSTALLKEY) === '1'; } catch(e){ return false; }
+}
+
+function markAppMode(){
+  document.documentElement.classList.toggle('app-mode', isStandalone());
+}
+
+function installPromo(){
+  if (isStandalone() || installDismissed()) return null;
+  var iosOnly = !deferredPrompt && isIOS();
+  if (!deferredPrompt && !iosOnly) return null;
+
+  var card = el('<div class="card install">' +
+    '<div class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg></div>' +
+    '<div class="tx"><b>Install on your phone</b><span>' +
+      (iosOnly ? 'Tap Share, then “Add to Home Screen.”'
+               : 'Runs full screen and works offline.') +
+    '</span></div>' +
+    (iosOnly ? '' : '<button id="doinstall">Install</button>') +
+    '<button class="no" id="noinstall" title="Dismiss">✕</button>' +
+  '</div>');
+
+  card.querySelector('#noinstall').onclick = function(){
+    try { localStorage.setItem(INSTALLKEY, '1'); } catch(e){}
+    render();
+  };
+  var go = card.querySelector('#doinstall');
+  if (go) go.onclick = function(){
+    var p = deferredPrompt;
+    deferredPrompt = null;
+    p.prompt();
+    p.userChoice.then(function(r){
+      if (r.outcome === 'accepted') toast('Installing…');
+      render();
+    });
+  };
+  return card;
+}
+
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  deferredPrompt = e;
+  render();
+});
+window.addEventListener('appinstalled', function(){
+  deferredPrompt = null;
+  markAppMode();
+  toast('Installed');
+  render();
+});
+if (window.matchMedia) {
+  var mq = window.matchMedia('(display-mode: standalone)');
+  (mq.addEventListener ? mq.addEventListener.bind(mq,'change') : mq.addListener.bind(mq))(function(){
+    markAppMode(); render();
+  });
+}
+
 /* ---------------- boot ---------------- */
+markAppMode();
 initTheme();
 state = load();
 render();
+
+// Service worker: needs http(s) and a top-level page, so it quietly sits out
+// file:// and embedded previews. Everything above works without it.
+if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0 && window.top === window.self) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
 
 // keep the header icon honest if something outside the page flips the theme
 if (window.MutationObserver) {
