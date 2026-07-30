@@ -65,6 +65,16 @@
   #app { max-width: 880px; margin: 0 auto; padding: 14px 16px 40px; min-height: 100%; }
 
   button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+  button:focus-visible, input:focus-visible {
+    outline: 3px solid var(--primary); outline-offset: 3px;
+  }
+  /* Quien tenga activado "reducir movimiento" no ve animaciones. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
+  }
   h1, h2, h3 { margin: 0; line-height: 1.15; }
 
   /* ---------- top bar ---------- */
