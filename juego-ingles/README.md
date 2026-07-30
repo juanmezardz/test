@@ -1,27 +1,48 @@
 # 🎈 Word Party — juego para aprender inglés
 
-Un juego de vocabulario inglés-español pensado para niñas y niños, en **un solo
-archivo HTML**. No necesita instalar nada, no necesita internet y no envía datos
-a ningún sitio: todo el progreso se guarda en el propio dispositivo.
+Un juego de vocabulario inglés-español pensado para niñas y niños. Es una **PWA**
+(aplicación web instalable): se añade a la pantalla de inicio del móvil o el
+iPad, se abre a pantalla completa como una app normal y funciona **sin
+internet**. No envía datos a ningún sitio: todo el progreso se guarda en el
+propio dispositivo.
 
-## Cómo jugar
+## Instalarla en el móvil o el iPad
 
-Abre `index.html` con doble clic. Eso es todo.
+El juego tiene que estar servido por **https** (o `localhost`) para poder
+instalarse; abriendo el archivo con doble clic funciona el juego, pero no la
+instalación.
 
-Para jugarlo en la tablet o el móvil tienes dos opciones:
+Una vez abierto desde su dirección web, el propio juego enseña un banner
+**«Instalar el juego»**:
 
-- **Copiar el archivo** al dispositivo (por AirDrop, correo, Drive…) y abrirlo
-  con el navegador.
-- **Servirlo desde el ordenador** y entrar desde el móvil por wifi:
+- **Android / Chrome / Edge:** toca *Instalar* y se añade sola.
+- **iPhone / iPad (Safari):** toca *Instalar* y sigue los dos pasos que
+  aparecen — botón **Compartir** → **Añadir a pantalla de inicio**.
 
-  ```bash
-  cd juego-ingles
-  python3 -m http.server 8000
-  # en el móvil: http://IP-DEL-ORDENADOR:8000
-  ```
+Después de instalarla puedes cerrar el navegador: el icono queda en la pantalla
+de inicio y el juego abre incluso en modo avión.
 
-En iPhone/iPad y Android puedes usar «Añadir a pantalla de inicio» para que
-quede como una app más.
+### Probarla en local
+
+```bash
+cd juego-ingles
+python3 -m http.server 8000
+# en el ordenador: http://localhost:8000  (aquí sí se puede instalar)
+# desde el móvil por wifi: http://IP-DEL-ORDENADOR:8000  (se juega, pero
+#   sin https el navegador no ofrece instalarla)
+```
+
+### Qué hace que sea instalable
+
+| Archivo | Para qué sirve |
+|---|---|
+| `manifest.webmanifest` | Nombre, iconos, color y modo pantalla completa |
+| `sw.js` | Service worker: guarda el juego para jugar sin conexión |
+| `icons/` | Iconos de la app (normales, *maskable* de Android y el de iOS) |
+
+El service worker guarda el juego entero en la primera visita. Al publicar una
+versión nueva conviene subir el número de `VERSION` en `sw.js` para que los
+dispositivos recojan el cambio.
 
 ## Qué incluye
 
@@ -57,8 +78,12 @@ la respuesta correcta con su traducción y se apunta en «Para repasar».
 
 ## Notas para quien lo instala
 
-- El progreso vive en `localStorage`. Si se borran los datos del navegador,
-  se pierde; no hay cuentas ni servidor.
+- El progreso vive en `localStorage`, **por dispositivo**. Si cada hija juega en
+  un aparato distinto, cada uno lleva sus propias estrellas; no hay cuentas ni
+  servidor que las sincronice.
+- El banner de instalar se puede cerrar con la ✕ y no vuelve a salir en ese
+  dispositivo (se recuerda en `localStorage`); nunca aparece durante una
+  partida.
 - La voz depende del sistema operativo. Si no hay ninguna voz inglesa
   instalada, el juego sigue funcionando pero sin audio (en Windows se añade en
   *Configuración → Hora e idioma → Voz*).
