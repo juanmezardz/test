@@ -232,7 +232,7 @@ function dayTitle(s){
 }
 
 /* ---------------- state ---------------- */
-var state, selected = todayISO(), lastKcal = 0, lastDateSeen = todayISO();
+var state, selected = todayISO(), lastKcal = 0, lastDateSeen = todayISO(), lastTheme = null;
 
 function signature(){ return JSON.stringify(EMBEDDED); }
 
@@ -337,6 +337,7 @@ function tickStatus(){
 /* ---------------- render ---------------- */
 function render(){
   var app = document.getElementById('app');
+  lastTheme = document.documentElement.getAttribute('data-theme');
   var scroll = app.scrollTop;
   app.innerHTML = '';
   var p = state.plan, t = totals(selected), isToday = selected === todayISO();
@@ -605,6 +606,14 @@ function copyText(text, cb){
 initTheme();
 state = load();
 render();
+
+// keep the header icon honest if something outside the page flips the theme
+if (window.MutationObserver) {
+  new MutationObserver(function(){
+    if (document.documentElement.getAttribute('data-theme') !== lastTheme) render();
+  }).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+}
+
 tickStatus();
 setInterval(tickStatus, 20000);
 </script>
