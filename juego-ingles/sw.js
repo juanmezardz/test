@@ -2,7 +2,8 @@
    Guarda el juego completo en el dispositivo para que funcione sin internet. */
 
 const VERSION = 'v1';
-const CACHE = 'word-party-' + VERSION;
+const PREFIX = 'word-party-';
+const CACHE = PREFIX + VERSION;
 
 /* Todo lo que hace falta para jugar sin conexión. */
 const CORE = [
@@ -30,8 +31,13 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
+    /* Solo las versiones viejas DE ESTE juego: caches.keys() devuelve las de
+       todo el dominio, y borrar las ajenas dejaría sin conexión a otra app
+       publicada en el mismo sitio. */
     const keys = await caches.keys();
-    await Promise.all(keys.map(k => (k !== CACHE ? caches.delete(k) : null)));
+    await Promise.all(keys
+      .filter(k => k.startsWith(PREFIX) && k !== CACHE)
+      .map(k => caches.delete(k)));
     if (self.registration.navigationPreload) {
       await self.registration.navigationPreload.enable().catch(() => {});
     }
