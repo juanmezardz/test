@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Word Party · Juego de inglés</title>
+<meta name="description" content="Juego para aprender inglés en casa: opciones, escribir, escuchar y emparejar. Funciona sin internet.">
+
+<!-- ============ PWA: instalable en móvil y iPad ============ -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#6c5ce7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16132a" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Word Party">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+  :root {
+    --bg: #f4f1fb;
+    --bg-2: #e8f4ff;
+    --card: #ffffff;
+    --text: #241c3b;
+    --muted: #6b6484;
+    --line: #e6e1f2;
+    --primary: #6c5ce7;
+    --primary-soft: #efecff;
+    --accent: #00b894;
+    --accent-soft: #e2f7f1;
+    --warn: #f6b93b;
+    --danger: #ff6b6b;
+    --danger-soft: #ffecec;
+    --shadow: 0 10px 30px rgba(60, 40, 120, .12);
+    --radius: 22px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16132a;
+      --bg-2: #101a2b;
+      --card: #211d3a;
+      --text: #f2eeff;
+      --muted: #a49ec2;
+      --line: #332c55;
+      --primary: #9b8bff;
+      --primary-soft: #2c2552;
+      --accent: #2fd6ac;
+      --accent-soft: #1c3f39;
+      --danger: #ff8787;
+      --danger-soft: #47262c;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f1fb; --bg-2: #e8f4ff; --card: #fff; --text: #241c3b; --muted: #6b6484;
+    --line: #e6e1f2; --primary: #6c5ce7; --primary-soft: #efecff; --accent: #00b894;
+    --accent-soft: #e2f7f1; --danger: #ff6b6b; --danger-soft: #ffecec;
+    --shadow: 0 10px 30px rgba(60, 40, 120, .12);
+  }
+  :root[data-theme="dark"] {
+    --bg: #16132a; --bg-2: #101a2b; --card: #211d3a; --text: #f2eeff; --muted: #a49ec2;
+    --line: #332c55; --primary: #9b8bff; --primary-soft: #2c2552; --accent: #2fd6ac;
+    --accent-soft: #1c3f39; --danger: #ff8787; --danger-soft: #47262c;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    background: linear-gradient(160deg, var(--bg) 0%, var(--bg-2) 100%);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app {
+    max-width: 880px; margin: 0 auto; min-height: 100%;
+    padding:
+      calc(14px + env(safe-area-inset-top))
+      calc(16px + env(safe-area-inset-right))
+      calc(40px + env(safe-area-inset-bottom))
+      calc(16px + env(safe-area-inset-left));
+  }
+
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+  button:focus-visible, input:focus-visible {
+    outline: 3px solid var(--primary); outline-offset: 3px;
+  }
+  /* Quien tenga activado "reducir movimiento" no ve animaciones. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
+  }
+  h1, h2, h3 { margin: 0; line-height: 1.15; }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 4px 16px;
+  }
+  .topbar[hidden] { display: none; }
+  .icon-btn {
+    width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center;
+    background: var(--card); box-shadow: var(--shadow); font-size: 20px; flex: none;
+  }
+  .icon-btn:active { transform: scale(.94); }
+  .who { display: flex; align-items: center; gap: 8px; font-weight: 800; }
+  .who .av { font-size: 26px; }
+  .spacer { flex: 1; }
+  .stars-chip {
+    display: flex; align-items: center; gap: 6px; font-weight: 800;
+    background: var(--card); box-shadow: var(--shadow);
+    padding: 9px 14px; border-radius: 999px; white-space: nowrap;
+  }
+
+  /* ---------- screens ---------- */
+  .screen { display: none; animation: pop .25s ease both; }
+  .screen.active { display: block; }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .hero { text-align: center; padding: 22px 8px 26px; }
+  .hero .logo { font-size: 52px; line-height: 1; }
+  .hero h1 { font-size: clamp(28px, 7vw, 40px); margin-top: 10px; letter-spacing: -.5px; }
+  .hero p { color: var(--muted); margin: 8px 0 0; font-weight: 600; }
+
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 18px;
+  }
+  .section-title { font-size: 14px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 800; margin: 26px 4px 10px; }
+
+  /* ---------- profiles ---------- */
+  .profiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+  .profile {
+    background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 20px 12px; text-align: center; display: grid; gap: 6px; position: relative;
+    border: 3px solid transparent; transition: transform .12s, border-color .12s;
+  }
+  .profile:hover { transform: translateY(-3px); border-color: var(--primary); }
+  .profile .av { font-size: 44px; }
+  .profile .nm { font-weight: 800; font-size: 17px; word-break: break-word; }
+  .profile .sub { font-size: 13px; color: var(--muted); font-weight: 700; }
+  .profile.add { border: 3px dashed var(--line); box-shadow: none; background: transparent; color: var(--muted); }
+  .profile .del {
+    position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 50%;
+    font-size: 13px; color: var(--muted); opacity: .55;
+  }
+  .profile .del:hover { opacity: 1; color: var(--danger); background: var(--danger-soft); }
+
+  .field { display: grid; gap: 8px; margin-bottom: 16px; }
+  .field label { font-weight: 800; font-size: 14px; }
+  input[type="text"] {
+    font: inherit; font-weight: 700; padding: 14px 16px; border-radius: 16px;
+    border: 2px solid var(--line); background: var(--bg); color: var(--text); width: 100%;
+  }
+  input[type="text"]:focus { outline: none; border-color: var(--primary); }
+  .emoji-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .emoji-opt {
+    width: 50px; height: 50px; border-radius: 14px; font-size: 26px; display: grid; place-items: center;
+    background: var(--bg); border: 2px solid transparent;
+  }
+  .emoji-opt[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-soft); }
+
+  .btn {
+    display: block; width: 100%; padding: 16px 20px; border-radius: 18px; font-weight: 800;
+    font-size: 17px; text-align: center; background: var(--primary); color: #fff;
+    box-shadow: 0 8px 20px rgba(108, 92, 231, .32); transition: transform .1s;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .45; box-shadow: none; cursor: not-allowed; }
+  .btn.ghost { background: var(--card); color: var(--text); box-shadow: var(--shadow); }
+  .btn.accent { background: var(--accent); box-shadow: 0 8px 20px rgba(0, 184, 148, .3); }
+  .btn-row { display: flex; gap: 12px; margin-top: 14px; }
+  .btn-row .btn { flex: 1; }
+
+  /* ---------- home ---------- */
+  .modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .mode {
+    background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: 14px;
+    display: flex; gap: 12px; align-items: center; text-align: left; border: 3px solid transparent;
+  }
+  .mode[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-soft); }
+  .mode .ic { font-size: 26px; flex: none; }
+  .mode .t { font-weight: 800; font-size: 15px; }
+  .mode .d { font-size: 12.5px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+
+  .cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 12px; }
+  .cat {
+    background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: 14px 8px;
+    text-align: center; border: 3px solid transparent; display: grid; gap: 4px;
+  }
+  .cat[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-soft); }
+  .cat .ic { font-size: 30px; }
+  .cat .t { font-weight: 800; font-size: 14px; }
+  .bar { height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; margin: 4px 10px 0; }
+  .bar > i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s; }
+
+  .sticky-play { position: sticky; bottom: 12px; margin-top: 22px; }
+  /* Cuando se ofrece instalar, el banner no debe tapar nada. */
+  body.has-install .sticky-play { bottom: calc(94px + env(safe-area-inset-bottom)); }
+  body.has-install #app { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
+
+  /* ---------- game ---------- */
+  .progress { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .progress .bar { flex: 1; height: 10px; margin: 0; }
+  .progress .bar > i { background: var(--primary); }
+  .progress .cnt { font-weight: 800; font-size: 14px; color: var(--muted); white-space: nowrap; }
+  .streak { font-weight: 800; font-size: 14px; }
+
+  .prompt {
+    background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 26px 18px; text-align: center; margin-bottom: 18px;
+  }
+  .prompt .big { font-size: clamp(72px, 22vw, 110px); line-height: 1.05; }
+  .prompt .word { font-size: clamp(30px, 9vw, 44px); font-weight: 900; letter-spacing: -.5px; }
+  .prompt .hint { color: var(--muted); font-weight: 700; margin-top: 8px; font-size: 15px; }
+  .prompt .ask { color: var(--muted); font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .speaker {
+    width: 116px; height: 116px; border-radius: 50%; background: var(--primary); color: #fff;
+    font-size: 48px; display: grid; place-items: center; margin: 0 auto;
+    box-shadow: 0 10px 26px rgba(108, 92, 231, .4);
+  }
+  .speaker:active { transform: scale(.95); }
+  .speaker.small { width: 54px; height: 54px; font-size: 24px; margin-top: 14px; box-shadow: 0 6px 16px rgba(108, 92, 231, .32); }
+  .speaker.playing { animation: ring 1s ease infinite; }
+  @keyframes ring { 0%,100% { box-shadow: 0 10px 26px rgba(108,92,231,.4); } 50% { box-shadow: 0 10px 26px rgba(108,92,231,.4), 0 0 0 16px rgba(108,92,231,.14); } }
+
+  .options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .opt {
+    background: var(--card); border-radius: 18px; box-shadow: var(--shadow);
+    padding: 20px 12px; font-weight: 800; font-size: 20px; text-align: center;
+    border: 3px solid transparent; min-height: 74px; transition: transform .1s;
+    display: grid; place-items: center; gap: 2px;
+  }
+  .opt .emo { font-size: 46px; line-height: 1.1; }
+  .opt:active { transform: scale(.97); }
+  .opt.correct { border-color: var(--accent); background: var(--accent-soft); }
+  .opt.wrong { border-color: var(--danger); background: var(--danger-soft); }
+  .opt.dim { opacity: .4; }
+  .opt:disabled { cursor: default; }
+
+  /* spelling */
+  .slots { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 18px; }
+  .slot {
+    width: 46px; height: 56px; border-radius: 12px; background: var(--card); box-shadow: var(--shadow);
+    display: grid; place-items: center; font-size: 24px; font-weight: 900; text-transform: uppercase;
+    border: 3px solid transparent;
+  }
+  .slot.empty { background: transparent; box-shadow: none; border: 3px dashed var(--line); }
+  .slot.correct { border-color: var(--accent); background: var(--accent-soft); }
+  .slot.wrong { border-color: var(--danger); background: var(--danger-soft); }
+  .tiles { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .tile {
+    width: 52px; height: 58px; border-radius: 14px; background: var(--primary); color: #fff;
+    font-size: 24px; font-weight: 900; text-transform: uppercase;
+    box-shadow: 0 6px 16px rgba(108, 92, 231, .3);
+  }
+  .tile:active { transform: scale(.94); }
+  .tile.used { opacity: .18; pointer-events: none; }
+
+  .feedback {
+    margin-top: 16px; border-radius: 18px; padding: 14px 16px; font-weight: 800;
+    display: flex; align-items: center; gap: 10px; min-height: 56px;
+  }
+  .feedback.ok { background: var(--accent-soft); color: var(--accent); }
+  .feedback.no { background: var(--danger-soft); color: var(--danger); }
+  .feedback .replay { margin-left: auto; font-size: 22px; }
+
+  /* ---------- results ---------- */
+  .result-hero { text-align: center; padding: 18px 10px 6px; }
+  .result-hero .emo { font-size: 76px; }
+  .result-hero h2 { font-size: 30px; margin: 8px 0 4px; }
+  .result-hero p { color: var(--muted); font-weight: 700; margin: 0; }
+  .score-row { display: flex; gap: 12px; margin: 20px 0 6px; }
+  .score {
+    flex: 1; background: var(--card); border-radius: 18px; box-shadow: var(--shadow);
+    padding: 16px 10px; text-align: center;
+  }
+  .score b { display: block; font-size: 26px; }
+  .score span { font-size: 12.5px; color: var(--muted); font-weight: 700; }
+  .review { display: grid; gap: 8px; }
+  .review .r {
+    display: flex; align-items: center; gap: 12px; background: var(--card);
+    border-radius: 14px; padding: 10px 14px; box-shadow: var(--shadow); font-weight: 700;
+  }
+  .review .r .e { font-size: 26px; }
+  .review .r .en { font-weight: 900; }
+  .review .r .es { color: var(--muted); margin-left: auto; font-size: 14px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 10px; }
+  .badge {
+    background: var(--card); box-shadow: var(--shadow); border-radius: 14px;
+    padding: 10px 14px; font-weight: 800; font-size: 14px; display: flex; gap: 8px; align-items: center;
+  }
+  .badge.locked { opacity: .35; }
+
+  .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 50; }
+  .confetti i {
+    position: absolute; top: -40px; font-size: 22px; animation: fall linear forwards;
+  }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); opacity: .2; } }
+
+  .foot { text-align: center; color: var(--muted); font-size: 12.5px; font-weight: 600; margin-top: 28px; }
+
+  /* ============ INSTALACIÓN (PWA) ============ */
+  .install-bar {
+    position: fixed; z-index: 60;
+    left: 12px; right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    max-width: 560px; margin: 0 auto;
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card); box-shadow: 0 12px 34px rgba(40, 20, 90, .28);
+    border: 1px solid var(--line); border-radius: 20px; padding: 12px 14px;
+    animation: rise .35s ease both;
+  }
+  .install-bar[hidden] { display: none; }
+  @keyframes rise { from { transform: translateY(26px); opacity: 0; } }
+  .install-bar .ib-ico { font-size: 28px; flex: none; }
+  .install-bar .ib-txt { display: grid; line-height: 1.25; min-width: 0; }
+  .install-bar .ib-txt b { font-size: 15px; font-weight: 900; }
+  .install-bar .ib-txt span { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+  .install-bar .ib-go {
+    flex: none; padding: 11px 16px; border-radius: 14px; font-weight: 900; font-size: 14.5px;
+    background: var(--primary); color: #fff; box-shadow: 0 6px 16px rgba(108, 92, 231, .32);
+  }
+  .install-bar .ib-go:active { transform: scale(.96); }
+  .install-bar .ib-x {
+    flex: none; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
+    color: var(--muted); font-size: 15px; font-weight: 900;
+  }
+
+  .sheet {
+    position: fixed; inset: 0; z-index: 70; display: grid; place-items: end center;
+    background: rgba(20, 12, 45, .5); padding: 16px;
+    animation: fade .2s ease both;
+  }
+  .sheet[hidden] { display: none; }
+  @keyframes fade { from { opacity: 0; } }
+  .sheet .panel {
+    width: 100%; max-width: 460px; background: var(--card); border-radius: 24px;
+    padding: 22px 20px calc(20px + env(safe-area-inset-bottom));
+    box-shadow: var(--shadow); animation: rise .28s ease both;
+  }
+  .sheet h2 { margin: 0 0 4px; font-size: 20px; font-weight: 900; }
+  .sheet p.lead { margin: 0 0 16px; color: var(--muted); font-weight: 600; font-size: 14px; }
+  .steps { display: grid; gap: 12px; margin-bottom: 18px; }
+  .steps li {
+    display: flex; gap: 12px; align-items: center; font-weight: 700; font-size: 15px;
+    background: var(--primary-soft); border-radius: 16px; padding: 12px 14px;
+  }
+  .steps li .n {
+    flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--primary);
+    color: #fff; display: grid; place-items: center; font-size: 14px; font-weight: 900;
+  }
+  .steps li .k {
+    display: inline-flex; align-items: center; gap: 4px; background: var(--card);
+    border-radius: 8px; padding: 2px 7px; font-weight: 900;
+  }
+
+  @media (max-width: 380px) {
+    .install-bar .ib-txt span { display: none; }
+    .opt { font-size: 18px; padding: 16px 8px; }
+    .tile { width: 46px; height: 52px; font-size: 21px; }
+    .slot { width: 40px; height: 50px; font-size: 21px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar" id="topbar" hidden>
+    <button class="icon-btn" id="btn-back" aria-label="Volver">←</button>
+    <div class="who"><span class="av" id="me-av">🦊</span><span id="me-name">—</span></div>
+    <div class="spacer"></div>
+    <div class="stars-chip">⭐ <span id="me-stars">0</span></div>
+    <button class="icon-btn" id="btn-sound" aria-label="Sonido">🔊</button>
+  </div>
+
+  <!-- ============ PERFILES ============ -->
+  <section class="screen active" id="screen-profiles">
+    <div class="hero">
+      <div class="logo">🎈🗣️🎉</div>
+      <h1>Word Party</h1>
+      <p>Aprende inglés jugando</p>
+    </div>
+    <div class="section-title">¿Quién juega?</div>
+    <div class="profiles" id="profiles"></div>
+  </section>
+
+  <!-- ============ NUEVO PERFIL ============ -->
+  <section class="screen" id="screen-new">
+    <div class="hero"><div class="logo">✨</div><h1>Nuevo jugador</h1></div>
+    <div class="card">
+      <div class="field">
+        <label for="new-name">Tu nombre</label>
+        <input type="text" id="new-name" maxlength="14" placeholder="Escribe tu nombre" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Elige tu personaje</label>
+        <div class="emoji-grid" id="avatars"></div>
+      </div>
+      <button class="btn" id="btn-create" disabled>¡Empezar!</button>
+      <div class="btn-row"><button class="btn ghost" id="btn-cancel-new">Cancelar</button></div>
+    </div>
+  </section>
+
+  <!-- ============ HOME ============ -->
+  <section class="screen" id="screen-home">
+    <div class="hero" style="padding-bottom:10px">
+      <div class="logo" id="home-av">🦊</div>
+      <h1 id="home-greet">¡Hola!</h1>
+      <p id="home-sub">Elige un juego y un tema</p>
+    </div>
+
+    <div class="section-title">Juego</div>
+    <div class="modes" id="modes"></div>
+
+    <div class="section-title">Tema</div>
+    <div class="cats" id="cats"></div>
+
+    <div class="sticky-play">
+      <button class="btn accent" id="btn-play">▶︎ ¡Jugar!</button>
+    </div>
+
+    <div class="section-title">Medallas</div>
+    <div class="badges" id="badges"></div>
+
+    <div class="foot">Hecho con cariño para aprender inglés en casa 💜</div>
+  </section>
+
+  <!-- ============ JUEGO ============ -->
+  <section class="screen" id="screen-game">
+    <div class="progress">
+      <div class="bar"><i id="game-bar" style="width:0%"></i></div>
+      <div class="cnt" id="game-cnt">1 / 10</div>
+      <div class="streak" id="game-streak"></div>
+    </div>
+    <div class="prompt" id="prompt"></div>
+    <div id="answer-area"></div>
+    <div class="feedback" id="feedback" style="visibility:hidden">&nbsp;</div>
+  </section>
+
+  <!-- ============ RESULTADOS ============ -->
+  <section class="screen" id="screen-results">
+    <div class="result-hero">
+      <div class="emo" id="res-emo">🏆</div>
+      <h2 id="res-title">¡Muy bien!</h2>
+      <p id="res-sub"></p>
+    </div>
+    <div class="score-row">
+      <div class="score"><b id="res-correct">0</b><span>aciertos</span></div>
+      <div class="score"><b id="res-stars">0</b><span>estrellas</span></div>
+      <div class="score"><b id="res-best">0</b><span>racha</span></div>
+    </div>
+    <div id="res-review-wrap" hidden>
+      <div class="section-title">Para repasar</div>
+      <div class="review" id="res-review"></div>
+    </div>
+    <div id="res-new-badges"></div>
+    <div class="btn-row">
+      <button class="btn accent" id="btn-again">Otra vez</button>
+      <button class="btn ghost" id="btn-menu">Menú</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- ============ INSTALAR COMO APP ============ -->
+<div class="install-bar" id="install-bar" hidden>
+  <div class="ib-ico">📲</div>
+  <div class="ib-txt">
+    <b>Instalar el juego</b>
+    <span>Se abre como app y funciona sin internet</span>
+  </div>
+  <button class="ib-go" id="btn-install">Instalar</button>
+  <button class="ib-x" id="btn-install-later" aria-label="Ahora no">✕</button>
+</div>
+
+<div class="sheet" id="ios-sheet" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="ios-sheet-title">
+    <h2 id="ios-sheet-title">Instalar en tu iPhone o iPad</h2>
+    <p class="lead">Son dos toques desde Safari y el juego queda en la pantalla de inicio.</p>
+    <ol class="steps">
+      <li><span class="n">1</span><span>Toca <span class="k">Compartir ⬆︎</span> abajo (o arriba en iPad)</span></li>
+      <li><span class="n">2</span><span>Baja y elige <span class="k">Añadir a pantalla de inicio</span></span></li>
+      <li><span class="n">3</span><span>Toca <span class="k">Añadir</span> y listo 🎉</span></li>
+    </ol>
+    <button class="btn" id="btn-ios-ok">Entendido</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =======================================================================
+     1. DATOS: vocabulario por temas
+     Para añadir palabras solo hay que meter { en, es, emoji } en un tema.
+     ======================================================================= */
+  const CATEGORIES = [
+    { id: 'animals', name: 'Animales', icon: '🐶', words: [
+      { en: 'dog', es: 'perro', emoji: '🐶' }, { en: 'cat', es: 'gato', emoji: '🐱' },
+      { en: 'bird', es: 'pájaro', emoji: '🐦' }, { en: 'fish', es: 'pez', emoji: '🐟' },
+      { en: 'horse', es: 'caballo', emoji: '🐴' }, { en: 'cow', es: 'vaca', emoji: '🐮' },
+      { en: 'pig', es: 'cerdo', emoji: '🐷' }, { en: 'sheep', es: 'oveja', emoji: '🐑' },
+      { en: 'duck', es: 'pato', emoji: '🦆' }, { en: 'rabbit', es: 'conejo', emoji: '🐰' },
+      { en: 'mouse', es: 'ratón', emoji: '🐭' }, { en: 'bear', es: 'oso', emoji: '🐻' },
+      { en: 'lion', es: 'león', emoji: '🦁' }, { en: 'tiger', es: 'tigre', emoji: '🐯' },
+      { en: 'monkey', es: 'mono', emoji: '🐵' }, { en: 'elephant', es: 'elefante', emoji: '🐘' },
+      { en: 'frog', es: 'rana', emoji: '🐸' }, { en: 'bee', es: 'abeja', emoji: '🐝' },
+      { en: 'butterfly', es: 'mariposa', emoji: '🦋' }, { en: 'turtle', es: 'tortuga', emoji: '🐢' }
+    ]},
+    { id: 'colors', name: 'Colores', icon: '🎨', words: [
+      { en: 'red', es: 'rojo', emoji: '🟥' }, { en: 'blue', es: 'azul', emoji: '🟦' },
+      { en: 'green', es: 'verde', emoji: '🟩' }, { en: 'yellow', es: 'amarillo', emoji: '🟨' },
+      { en: 'orange', es: 'naranja', emoji: '🟧' }, { en: 'purple', es: 'morado', emoji: '🟪' },
+      { en: 'brown', es: 'marrón', emoji: '🟫' }, { en: 'black', es: 'negro', emoji: '⬛' },
+      { en: 'white', es: 'blanco', emoji: '⬜' }, { en: 'pink', es: 'rosa', emoji: '💗' }
+    ]},
+    { id: 'numbers', name: 'Números', icon: '🔢', words: [
+      { en: 'one', es: 'uno', emoji: '1️⃣' }, { en: 'two', es: 'dos', emoji: '2️⃣' },
+      { en: 'three', es: 'tres', emoji: '3️⃣' }, { en: 'four', es: 'cuatro', emoji: '4️⃣' },
+      { en: 'five', es: 'cinco', emoji: '5️⃣' }, { en: 'six', es: 'seis', emoji: '6️⃣' },
+      { en: 'seven', es: 'siete', emoji: '7️⃣' }, { en: 'eight', es: 'ocho', emoji: '8️⃣' },
+      { en: 'nine', es: 'nueve', emoji: '9️⃣' }, { en: 'ten', es: 'diez', emoji: '🔟' }
+    ]},
+    { id: 'food', name: 'Comida', icon: '🍎', words: [
+      { en: 'apple', es: 'manzana', emoji: '🍎' }, { en: 'banana', es: 'plátano', emoji: '🍌' },
+      { en: 'bread', es: 'pan', emoji: '🍞' }, { en: 'milk', es: 'leche', emoji: '🥛' },
+      { en: 'cheese', es: 'queso', emoji: '🧀' }, { en: 'egg', es: 'huevo', emoji: '🥚' },
+      { en: 'water', es: 'agua', emoji: '💧' }, { en: 'grapes', es: 'uvas', emoji: '🍇' },
+      { en: 'strawberry', es: 'fresa', emoji: '🍓' }, { en: 'carrot', es: 'zanahoria', emoji: '🥕' },
+      { en: 'tomato', es: 'tomate', emoji: '🍅' }, { en: 'rice', es: 'arroz', emoji: '🍚' },
+      { en: 'chicken', es: 'pollo', emoji: '🍗' }, { en: 'pizza', es: 'pizza', emoji: '🍕' },
+      { en: 'cake', es: 'tarta', emoji: '🍰' }, { en: 'ice cream', es: 'helado', emoji: '🍦' },
+      { en: 'cookie', es: 'galleta', emoji: '🍪' }, { en: 'soup', es: 'sopa', emoji: '🍲' },
+      { en: 'juice', es: 'zumo', emoji: '🧃' }, { en: 'honey', es: 'miel', emoji: '🍯' }
+    ]},
+    { id: 'family', name: 'Familia', icon: '👨‍👩‍👧', words: [
+      { en: 'mother', es: 'madre', emoji: '👩' }, { en: 'father', es: 'padre', emoji: '👨' },
+      { en: 'sister', es: 'hermana', emoji: '👧' }, { en: 'brother', es: 'hermano', emoji: '👦' },
+      { en: 'baby', es: 'bebé', emoji: '👶' }, { en: 'grandmother', es: 'abuela', emoji: '👵' },
+      { en: 'grandfather', es: 'abuelo', emoji: '👴' }, { en: 'family', es: 'familia', emoji: '👨‍👩‍👧' },
+      { en: 'friend', es: 'amigo', emoji: '🧑‍🤝‍🧑' }, { en: 'cousin', es: 'primo', emoji: '🧒' }
+    ]},
+    { id: 'body', name: 'Cuerpo', icon: '✋', words: [
+      { en: 'hand', es: 'mano', emoji: '✋' }, { en: 'foot', es: 'pie', emoji: '🦶' },
+      { en: 'eye', es: 'ojo', emoji: '👁️' }, { en: 'ear', es: 'oreja', emoji: '👂' },
+      { en: 'nose', es: 'nariz', emoji: '👃' }, { en: 'mouth', es: 'boca', emoji: '👄' },
+      { en: 'tooth', es: 'diente', emoji: '🦷' }, { en: 'hair', es: 'pelo', emoji: '💇' },
+      { en: 'arm', es: 'brazo', emoji: '💪' }, { en: 'leg', es: 'pierna', emoji: '🦵' },
+      { en: 'tongue', es: 'lengua', emoji: '👅' }, { en: 'face', es: 'cara', emoji: '😐' }
+    ]},
+    { id: 'clothes', name: 'Ropa', icon: '👕', words: [
+      { en: 'shirt', es: 'camiseta', emoji: '👕' }, { en: 'pants', es: 'pantalones', emoji: '👖' },
+      { en: 'dress', es: 'vestido', emoji: '👗' }, { en: 'shoes', es: 'zapatos', emoji: '👟' },
+      { en: 'socks', es: 'calcetines', emoji: '🧦' }, { en: 'hat', es: 'sombrero', emoji: '🎩' },
+      { en: 'coat', es: 'abrigo', emoji: '🧥' }, { en: 'gloves', es: 'guantes', emoji: '🧤' },
+      { en: 'scarf', es: 'bufanda', emoji: '🧣' }, { en: 'boots', es: 'botas', emoji: '🥾' },
+      { en: 'glasses', es: 'gafas', emoji: '👓' }, { en: 'ring', es: 'anillo', emoji: '💍' }
+    ]},
+    { id: 'house', name: 'Casa', icon: '🏠', words: [
+      { en: 'house', es: 'casa', emoji: '🏠' }, { en: 'door', es: 'puerta', emoji: '🚪' },
+      { en: 'window', es: 'ventana', emoji: '🪟' }, { en: 'bed', es: 'cama', emoji: '🛏️' },
+      { en: 'chair', es: 'silla', emoji: '🪑' }, { en: 'sofa', es: 'sofá', emoji: '🛋️' },
+      { en: 'key', es: 'llave', emoji: '🔑' }, { en: 'lamp', es: 'lámpara', emoji: '💡' },
+      { en: 'clock', es: 'reloj', emoji: '🕐' }, { en: 'bath', es: 'baño', emoji: '🛁' },
+      { en: 'spoon', es: 'cuchara', emoji: '🥄' }, { en: 'cup', es: 'taza', emoji: '☕' },
+      { en: 'plate', es: 'plato', emoji: '🍽️' }, { en: 'mirror', es: 'espejo', emoji: '🪞' }
+    ]},
+    { id: 'school', name: 'Cole', icon: '🎒', words: [
+      { en: 'book', es: 'libro', emoji: '📕' }, { en: 'pencil', es: 'lápiz', emoji: '✏️' },
+      { en: 'pen', es: 'bolígrafo', emoji: '🖊️' }, { en: 'ruler', es: 'regla', emoji: '📏' },
+      { en: 'scissors', es: 'tijeras', emoji: '✂️' }, { en: 'paper', es: 'papel', emoji: '📄' },
+      { en: 'backpack', es: 'mochila', emoji: '🎒' }, { en: 'teacher', es: 'profesora', emoji: '👩‍🏫' },
+      { en: 'school', es: 'colegio', emoji: '🏫' }, { en: 'crayon', es: 'cera', emoji: '🖍️' },
+      { en: 'paint', es: 'pintura', emoji: '🎨' }, { en: 'computer', es: 'ordenador', emoji: '💻' }
+    ]},
+    { id: 'nature', name: 'Naturaleza', icon: '🌳', words: [
+      { en: 'sun', es: 'sol', emoji: '☀️' }, { en: 'moon', es: 'luna', emoji: '🌙' },
+      { en: 'star', es: 'estrella', emoji: '⭐' }, { en: 'cloud', es: 'nube', emoji: '☁️' },
+      { en: 'rain', es: 'lluvia', emoji: '🌧️' }, { en: 'snow', es: 'nieve', emoji: '❄️' },
+      { en: 'tree', es: 'árbol', emoji: '🌳' }, { en: 'flower', es: 'flor', emoji: '🌻' },
+      { en: 'mountain', es: 'montaña', emoji: '⛰️' }, { en: 'sea', es: 'mar', emoji: '🌊' },
+      { en: 'fire', es: 'fuego', emoji: '🔥' }, { en: 'rainbow', es: 'arcoíris', emoji: '🌈' }
+    ]},
+    { id: 'actions', name: 'Acciones', icon: '🏃', words: [
+      { en: 'run', es: 'correr', emoji: '🏃' }, { en: 'jump', es: 'saltar', emoji: '🤸' },
+      { en: 'eat', es: 'comer', emoji: '🍴' }, { en: 'drink', es: 'beber', emoji: '🥤' },
+      { en: 'sleep', es: 'dormir', emoji: '😴' }, { en: 'read', es: 'leer', emoji: '📖' },
+      { en: 'write', es: 'escribir', emoji: '✍️' }, { en: 'sing', es: 'cantar', emoji: '🎤' },
+      { en: 'dance', es: 'bailar', emoji: '💃' }, { en: 'swim', es: 'nadar', emoji: '🏊' },
+      { en: 'play', es: 'jugar', emoji: '⚽' }, { en: 'walk', es: 'andar', emoji: '🚶' }
+    ]},
+    { id: 'feelings', name: 'Emociones', icon: '😀', words: [
+      { en: 'happy', es: 'feliz', emoji: '😀' }, { en: 'sad', es: 'triste', emoji: '😢' },
+      { en: 'angry', es: 'enfadado', emoji: '😠' }, { en: 'tired', es: 'cansado', emoji: '😪' },
+      { en: 'scared', es: 'asustado', emoji: '😨' }, { en: 'surprised', es: 'sorprendido', emoji: '😲' },
+      { en: 'love', es: 'amor', emoji: '❤️' }, { en: 'sick', es: 'enfermo', emoji: '🤒' },
+      { en: 'hungry', es: 'hambriento', emoji: '😋' }, { en: 'cold', es: 'frío', emoji: '🥶' }
+    ]}
+  ];
+
+  const MODES = [
+    { id: 'look',      icon: '👀', title: 'Mira y elige', desc: 'Ves un dibujo, eliges la palabra' },
+    { id: 'listen',    icon: '👂', title: 'Escucha',      desc: 'Oyes la palabra, eliges el dibujo' },
+    { id: 'translate', icon: '🔁', title: 'Traduce',      desc: 'Del español al inglés' },
+    { id: 'spell',     icon: '🔤', title: 'Escribe',      desc: 'Ordena las letras' }
+  ];
+
+  const AVATARS = ['🦊','🐰','🦄','🐼','🦋','🐨','🐧','🦁','🐸','🐝','🦖','🐬','🌸','⭐','🍓','🐢'];
+
+  const BADGES = [
+    { stars: 25,   icon: '🌱', name: 'Primeros pasos' },
+    { stars: 75,   icon: '🌟', name: 'Estrellita' },
+    { stars: 150,  icon: '🚀', name: 'Despegando' },
+    { stars: 300,  icon: '🏅', name: 'Campeona' },
+    { stars: 600,  icon: '👑', name: 'Reina del inglés' },
+    { stars: 1000, icon: '🌈', name: 'Leyenda' }
+  ];
+
+  const ROUND_LENGTH = 10;
+  const PRAISE_OK = ['¡Genial!', '¡Muy bien!', '¡Perfecto!', '¡Eso es!', '¡Bravo!', '¡Fantástico!', '¡Lo tienes!'];
+
+  /* =======================================================================
+     2. ESTADO Y ALMACENAMIENTO
+     ======================================================================= */
+  const STORE_KEY = 'word-party-v1';
+  let data = { profiles: [], lastProfileId: null, sound: true };
+  let me = null;                 // perfil activo
+  let pick = { mode: 'look', cat: 'animals' };
+  let game = null;               // partida en curso
+  let pendingAvatar = AVATARS[0];
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) data = Object.assign(data, JSON.parse(raw));
+    } catch (e) { /* almacenamiento no disponible: se juega sin guardar */ }
+  }
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch (e) {}
+  }
+
+  const ALL_WORDS = CATEGORIES.flatMap(c => c.words.map(w => Object.assign({ cat: c.id }, w)));
+  const byKey = {};
+  ALL_WORDS.forEach(w => { byKey[w.en] = w; });
+
+  function catWords(catId) {
+    if (catId === 'all') return ALL_WORDS;
+    const c = CATEGORIES.find(c => c.id === catId);
+    return c ? c.words.map(w => Object.assign({ cat: c.id }, w)) : ALL_WORDS;
+  }
+
+  /* =======================================================================
+     3. UTILIDADES
+     ======================================================================= */
+  const $ = sel => document.querySelector(sel);
+  const el = (tag, cls, html) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (html != null) n.innerHTML = html;
+    return n;
+  };
+  const rnd = n => Math.floor(Math.random() * n);
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  /* ---- sonido ---- */
+  let actx = null;
+  function beep(kind) {
+    if (!data.sound) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const notes = kind === 'ok' ? [660, 880, 1180] : [300, 220];
+      notes.forEach((f, i) => {
+        const o = actx.createOscillator(), g = actx.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        const t = actx.currentTime + i * 0.09;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.18, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+        o.connect(g); g.connect(actx.destination);
+        o.start(t); o.stop(t + 0.24);
+      });
+    } catch (e) {}
+  }
+
+  let enVoice = null;
+  function pickVoice() {
+    if (!('speechSynthesis' in window)) return;
+    const vs = speechSynthesis.getVoices();
+    enVoice = vs.find(v => /^en[-_]GB/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null;
+  }
+  if ('speechSynthesis' in window) {
+    pickVoice();
+    speechSynthesis.onvoiceschanged = pickVoice;
+  }
+  function say(text, onEnd) {
+    if (!('speechSynthesis' in window)) { if (onEnd) onEnd(); return; }
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = enVoice ? enVoice.lang : 'en-US';
+      if (enVoice) u.voice = enVoice;
+      u.rate = 0.82; u.pitch = 1.1;
+      if (onEnd) { u.onend = onEnd; u.onerror = onEnd; }
+      speechSynthesis.speak(u);
+    } catch (e) { if (onEnd) onEnd(); }
+  }
+
+  function confetti() {
+    const box = el('div', 'confetti');
+    const pieces = ['🎉','⭐','✨','🎈','💜','🌟','🎊'];
+    for (let i = 0; i < 32; i++) {
+      const p = el('i', null, pieces[rnd(pieces.length)]);
+      p.style.left = rnd(100) + '%';
+      p.style.animationDuration = (1.8 + Math.random() * 1.6) + 's';
+      p.style.animationDelay = (Math.random() * 0.6) + 's';
+      p.style.fontSize = (16 + rnd(18)) + 'px';
+      box.appendChild(p);
+    }
+    document.body.appendChild(box);
+    setTimeout(() => box.remove(), 4200);
+  }
+
+  /* =======================================================================
+     4. NAVEGACIÓN
+     ======================================================================= */
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+    $('#topbar').hidden = (id === 'screen-profiles' || id === 'screen-new');
+    currentScreen = id;
+    refreshInstallBar();
+    window.scrollTo(0, 0);
+  }
+
+  function syncTopbar() {
+    if (!me) return;
+    $('#me-av').textContent = me.emoji;
+    $('#me-name').textContent = me.name;
+    $('#me-stars').textContent = me.stars;
+    $('#btn-sound').textContent = data.sound ? '🔊' : '🔇';
+  }
+
+  /* =======================================================================
+     5. PANTALLA DE PERFILES
+     ======================================================================= */
+  function renderProfiles() {
+    const box = $('#profiles');
+    box.innerHTML = '';
+    data.profiles.forEach(p => {
+      const mastered = Object.values(p.mastery || {}).filter(v => v >= 3).length;
+      const card = el('button', 'profile');
+      card.innerHTML =
+        '<div class="av">' + p.emoji + '</div>' +
+        '<div class="nm">' + escapeHtml(p.name) + '</div>' +
+        '<div class="sub">⭐ ' + p.stars + ' · ' + mastered + ' palabras</div>';
+      card.addEventListener('click', () => enter(p.id));
+      const del = el('button', 'del', '✕');
+      del.title = 'Borrar jugador';
+      del.addEventListener('click', ev => {
+        ev.stopPropagation();
+        if (confirm('¿Borrar el perfil de ' + p.name + ' y todo su progreso?')) {
+          data.profiles = data.profiles.filter(x => x.id !== p.id);
+          save(); renderProfiles();
+        }
+      });
+      card.appendChild(del);
+      box.appendChild(card);
+    });
+
+    if (data.profiles.length < 4) {
+      const add = el('button', 'profile add');
+      add.innerHTML = '<div class="av">➕</div><div class="nm">Añadir</div><div class="sub">nuevo jugador</div>';
+      add.addEventListener('click', openNewProfile);
+      box.appendChild(add);
+    }
+  }
+
+  function openNewProfile() {
+    $('#new-name').value = '';
+    pendingAvatar = AVATARS[rnd(AVATARS.length)];
+    const grid = $('#avatars');
+    grid.innerHTML = '';
+    AVATARS.forEach(a => {
+      const b = el('button', 'emoji-opt', a);
+      b.setAttribute('aria-pressed', String(a === pendingAvatar));
+      b.addEventListener('click', () => {
+        pendingAvatar = a;
+        grid.querySelectorAll('.emoji-opt').forEach(x => x.setAttribute('aria-pressed', String(x.textContent === a)));
+      });
+      grid.appendChild(b);
+    });
+    $('#btn-create').disabled = true;
+    show('screen-new');
+    setTimeout(() => $('#new-name').focus(), 150);
+  }
+
+  $('#new-name').addEventListener('input', e => {
+    $('#btn-create').disabled = e.target.value.trim().length === 0;
+  });
+  $('#new-name').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !$('#btn-create').disabled) createProfile();
+  });
+  $('#btn-create').addEventListener('click', createProfile);
+  $('#btn-cancel-new').addEventListener('click', () => show('screen-profiles'));
+
+  function createProfile() {
+    const name = $('#new-name').value.trim().slice(0, 14);
+    if (!name) return;
+    const p = { id: 'p' + Date.now(), name: name, emoji: pendingAvatar, stars: 0, mastery: {}, badges: [], plays: 0 };
+    data.profiles.push(p);
+    save();
+    enter(p.id);
+  }
+
+  function enter(id) {
+    me = data.profiles.find(p => p.id === id);
+    if (!me) return;
+    me.mastery = me.mastery || {};
+    me.badges = me.badges || [];
+    data.lastProfileId = id;
+    save();
+    syncTopbar();
+    renderHome();
+    show('screen-home');
+  }
+
+  /* =======================================================================
+     6. PANTALLA HOME
+     ======================================================================= */
+  function renderHome() {
+    $('#home-av').textContent = me.emoji;
+    $('#home-greet').textContent = '¡Hola, ' + me.name + '!';
+    const mastered = Object.values(me.mastery).filter(v => v >= 3).length;
+    $('#home-sub').textContent = mastered
+      ? 'Ya dominas ' + mastered + ' palabras. ¿Seguimos?'
+      : 'Elige un juego y un tema';
+
+    const modeBox = $('#modes');
+    modeBox.innerHTML = '';
+    MODES.forEach(m => {
+      const b = el('button', 'mode');
+      b.setAttribute('aria-pressed', String(m.id === pick.mode));
+      b.innerHTML = '<div class="ic">' + m.icon + '</div><div><div class="t">' + m.title + '</div><div class="d">' + m.desc + '</div></div>';
+      b.addEventListener('click', () => { pick.mode = m.id; renderHome(); });
+      modeBox.appendChild(b);
+    });
+
+    const catBox = $('#cats');
+    catBox.innerHTML = '';
+    const list = CATEGORIES.concat([{ id: 'all', name: 'Todo', icon: '🎲', words: ALL_WORDS }]);
+    list.forEach(c => {
+      const words = c.id === 'all' ? ALL_WORDS : c.words;
+      const done = words.filter(w => (me.mastery[w.en] || 0) >= 3).length;
+      const pct = Math.round(done / words.length * 100);
+      const b = el('button', 'cat');
+      b.setAttribute('aria-pressed', String(c.id === pick.cat));
+      b.innerHTML = '<div class="ic">' + c.icon + '</div><div class="t">' + c.name + '</div>' +
+                    '<div class="bar"><i style="width:' + pct + '%"></i></div>';
+      b.addEventListener('click', () => { pick.cat = c.id; renderHome(); });
+      catBox.appendChild(b);
+    });
+
+    const badgeBox = $('#badges');
+    badgeBox.innerHTML = '';
+    BADGES.forEach(bd => {
+      const got = me.stars >= bd.stars;
+      const n = el('div', 'badge' + (got ? '' : ' locked'));
+      n.innerHTML = '<span>' + bd.icon + '</span><span>' + bd.name + (got ? '' : ' · ' + bd.stars + '⭐') + '</span>';
+      badgeBox.appendChild(n);
+    });
+
+    syncTopbar();
+  }
+
+  $('#btn-play').addEventListener('click', () => startGame());
+  $('#btn-back').addEventListener('click', () => {
+    if ($('#screen-game').classList.contains('active') || $('#screen-results').classList.contains('active')) {
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
+      if (game && game.cleanup) { game.cleanup(); game.cleanup = null; }
+      game = null;
+      renderHome(); show('screen-home');
+    } else {
+      me = null; renderProfiles(); show('screen-profiles');
+    }
+  });
+  $('#btn-sound').addEventListener('click', () => {
+    data.sound = !data.sound; save(); syncTopbar();
+    if (!data.sound && 'speechSynthesis' in window) speechSynthesis.cancel();
+  });
+
+  /* =======================================================================
+     7. MOTOR DEL JUEGO
+     ======================================================================= */
+  // Elige palabras dando más peso a las que aún no domina (repaso espaciado sencillo).
+  function chooseWords(pool, n) {
+    const weighted = [];
+    pool.forEach(w => {
+      const m = me.mastery[w.en] || 0;
+      const weight = m <= 0 ? 5 : m === 1 ? 4 : m === 2 ? 3 : m === 3 ? 2 : 1;
+      for (let i = 0; i < weight; i++) weighted.push(w);
+    });
+    const out = [];
+    const seen = {};
+    let guard = 0;
+    while (out.length < Math.min(n, pool.length) && guard++ < 4000) {
+      const w = weighted[rnd(weighted.length)];
+      if (!seen[w.en]) { seen[w.en] = 1; out.push(w); }
+    }
+    return out;
+  }
+
+  // Distractores del mismo tema, nunca con el mismo dibujo que la respuesta
+  // (si no, en el modo "escucha" habría dos opciones válidas).
+  function distractors(word, pool, n) {
+    const usable = w => w.en !== word.en && w.emoji !== word.emoji;
+    let same = pool.filter(usable);
+    if (same.length < n) same = ALL_WORDS.filter(usable);
+    const out = [], usedEmoji = {};
+    usedEmoji[word.emoji] = 1;
+    shuffle(same).forEach(w => {
+      if (out.length < n && !usedEmoji[w.emoji]) { usedEmoji[w.emoji] = 1; out.push(w); }
+    });
+    return out;
+  }
+
+  function startGame() {
+    let pool = catWords(pick.cat);
+    // El modo "escribe" solo usa palabras cortas de una sola pieza.
+    if (pick.mode === 'spell') {
+      const short = pool.filter(w => w.en.length <= 7 && !/\s/.test(w.en));
+      pool = short.length >= 6 ? short : ALL_WORDS.filter(w => w.en.length <= 7 && !/\s/.test(w.en));
+    }
+    game = {
+      mode: pick.mode,
+      cat: pick.cat,
+      pool: pool,
+      queue: chooseWords(pool, ROUND_LENGTH),
+      i: 0, correct: 0, stars: 0, streak: 0, best: 0,
+      missed: [], locked: false, cleanup: null
+    };
+    const round = game;
+    game.isCurrent = () => game === round;
+    show('screen-game');
+    nextQuestion();
+  }
+
+  function nextQuestion() {
+    if (!game) return;
+    if (game.cleanup) { game.cleanup(); game.cleanup = null; }
+    if (game.i >= game.queue.length) return finishGame();
+    game.locked = false;
+    const w = game.queue[game.i];
+
+    $('#game-bar').style.width = (game.i / game.queue.length * 100) + '%';
+    $('#game-cnt').textContent = (game.i + 1) + ' / ' + game.queue.length;
+    $('#game-streak').textContent = game.streak >= 3 ? '🔥 ' + game.streak : '';
+    const fb = $('#feedback');
+    fb.style.visibility = 'hidden'; fb.className = 'feedback'; fb.innerHTML = '&nbsp;';
+
+    const prompt = $('#prompt');
+    const area = $('#answer-area');
+    prompt.innerHTML = ''; area.innerHTML = '';
+
+    if (game.mode === 'look')      renderLook(w, prompt, area);
+    else if (game.mode === 'listen')    renderListen(w, prompt, area);
+    else if (game.mode === 'translate') renderTranslate(w, prompt, area);
+    else                                renderSpell(w, prompt, area);
+  }
+
+  function optionButton(html, onClick) {
+    const b = el('button', 'opt', html);
+    b.addEventListener('click', () => onClick(b));
+    return b;
+  }
+
+  function renderLook(w, prompt, area) {
+    prompt.innerHTML = '<div class="ask">¿Cómo se dice en inglés?</div><div class="big">' + w.emoji + '</div>';
+    const opts = shuffle(distractors(w, game.pool, 3).concat([w]));
+    const box = el('div', 'options');
+    opts.forEach(o => box.appendChild(optionButton(escapeHtml(o.en), b => answer(o.en === w.en, w, b, box))));
+    area.appendChild(box);
+  }
+
+  function renderTranslate(w, prompt, area) {
+    prompt.innerHTML = '<div class="ask">En inglés, «' + escapeHtml(w.es) + '» es…</div>' +
+                       '<div class="word">' + escapeHtml(w.es) + '</div>';
+    const opts = shuffle(distractors(w, game.pool, 3).concat([w]));
+    const box = el('div', 'options');
+    opts.forEach(o => box.appendChild(optionButton(escapeHtml(o.en), b => answer(o.en === w.en, w, b, box))));
+    area.appendChild(box);
+  }
+
+  function renderListen(w, prompt, area) {
+    prompt.innerHTML = '<div class="ask">Escucha y toca el dibujo</div>';
+    const sp = el('button', 'speaker', '🔊');
+    sp.setAttribute('aria-label', 'Repetir la palabra');
+    const play = () => {
+      sp.classList.add('playing');
+      say(w.en, () => sp.classList.remove('playing'));
+      setTimeout(() => sp.classList.remove('playing'), 2500);
+    };
+    sp.addEventListener('click', play);
+    prompt.appendChild(sp);
+    setTimeout(play, 350);
+
+    const opts = shuffle(distractors(w, game.pool, 3).concat([w]));
+    const box = el('div', 'options');
+    opts.forEach(o => box.appendChild(optionButton('<span class="emo">' + o.emoji + '</span>',
+      b => answer(o.en === w.en, w, b, box))));
+    area.appendChild(box);
+  }
+
+  function renderSpell(w, prompt, area) {
+    prompt.innerHTML = '<div class="big">' + w.emoji + '</div><div class="hint">' + escapeHtml(w.es) + '</div>';
+    const hear = el('button', 'speaker small', '🔊');
+    hear.setAttribute('aria-label', 'Escuchar la palabra');
+    hear.addEventListener('click', () => say(w.en));
+    prompt.appendChild(hear);
+
+    const letters = w.en.split('');
+    const slotsBox = el('div', 'slots');
+    const tilesBox = el('div', 'tiles');
+    const filled = [];
+
+    letters.forEach(() => {
+      const s = el('div', 'slot empty', '');
+      slotsBox.appendChild(s);
+    });
+
+    const bag = shuffle(letters.map((ch, i) => ({ ch: ch, i: i })));
+    bag.forEach(t => {
+      const b = el('button', 'tile', t.ch);
+      b.addEventListener('click', () => useTile(b, t.ch));
+      tilesBox.appendChild(b);
+    });
+
+    function useTile(b, ch) {
+      if (game.locked || filled.length >= letters.length || b.classList.contains('used')) return;
+      b.classList.add('used');
+      filled.push({ ch: ch, tile: b });
+      paint();
+      if (filled.length === letters.length) setTimeout(check, 220);
+    }
+
+    function undo() {
+      if (game.locked || !filled.length) return;
+      const removed = filled.pop();
+      removed.tile.classList.remove('used');
+      paint();
+    }
+
+    // Con teclado también se puede escribir (útil en portátil).
+    function onKey(ev) {
+      if (game.locked) return;
+      if (ev.key === 'Backspace') { ev.preventDefault(); undo(); return; }
+      const k = ev.key.length === 1 ? ev.key.toLowerCase() : '';
+      if (!k) return;
+      const free = Array.prototype.filter.call(tilesBox.children, b => !b.classList.contains('used'));
+      const hit = free.find(b => b.textContent === k);
+      if (hit) { ev.preventDefault(); useTile(hit, k); }
+    }
+    document.addEventListener('keydown', onKey);
+    game.cleanup = () => document.removeEventListener('keydown', onKey);
+
+    function paint() {
+      const slots = slotsBox.children;
+      for (let i = 0; i < slots.length; i++) {
+        const s = slots[i];
+        if (filled[i]) { s.textContent = filled[i].ch; s.className = 'slot'; }
+        else { s.textContent = ''; s.className = 'slot empty'; }
+      }
+    }
+    // Tocar un hueco lleno devuelve la letra.
+    slotsBox.addEventListener('click', ev => {
+      if (game.locked) return;
+      const idx = Array.prototype.indexOf.call(slotsBox.children, ev.target);
+      if (idx < 0 || !filled[idx]) return;
+      const removed = filled.splice(idx, 1)[0];
+      removed.tile.classList.remove('used');
+      paint();
+    });
+
+    function check() {
+      const guess = filled.map(f => f.ch).join('');
+      const ok = guess === w.en;
+      Array.prototype.forEach.call(slotsBox.children, s => s.classList.add(ok ? 'correct' : 'wrong'));
+      if (!ok) {
+        setTimeout(() => {
+          Array.prototype.forEach.call(slotsBox.children, (s, i) => {
+            s.textContent = letters[i]; s.className = 'slot correct';
+          });
+        }, 700);
+      }
+      answer(ok, w, null, tilesBox);
+    }
+
+    area.appendChild(slotsBox);
+    area.appendChild(tilesBox);
+  }
+
+  function answer(ok, word, btn, container) {
+    if (game.locked) return;
+    game.locked = true;
+
+    // marca visual de las opciones
+    if (container && container.classList.contains('options')) {
+      Array.prototype.forEach.call(container.children, b => {
+        b.disabled = true;
+        const text = b.textContent.trim();
+        const isRight = (game.mode === 'listen') ? text === word.emoji : text === word.en;
+        if (isRight) b.classList.add('correct');
+        else if (b === btn) b.classList.add('wrong');
+        else b.classList.add('dim');
+      });
+    } else if (container) {
+      Array.prototype.forEach.call(container.children, b => { b.disabled = true; });
+    }
+
+    const m = me.mastery[word.en] || 0;
+    if (ok) {
+      game.correct++;
+      game.streak++;
+      game.best = Math.max(game.best, game.streak);
+      const bonus = game.streak >= 5 ? 2 : game.streak >= 3 ? 1 : 0;
+      game.stars += 1 + bonus;
+      me.mastery[word.en] = Math.min(5, m + 1);
+      beep('ok');
+      const fb = $('#feedback');
+      fb.className = 'feedback ok';
+      fb.innerHTML = '<span>✅ ' + PRAISE_OK[rnd(PRAISE_OK.length)] + ' <b>' + escapeHtml(word.en) + '</b>' +
+                     (bonus ? ' · +' + (1 + bonus) + '⭐' : '') + '</span>';
+      fb.style.visibility = 'visible';
+      addReplay(fb, word);
+    } else {
+      game.streak = 0;
+      me.mastery[word.en] = Math.max(-1, m - 1);
+      if (!game.missed.some(x => x.en === word.en)) game.missed.push(word);
+      beep('no');
+      const fb = $('#feedback');
+      fb.className = 'feedback no';
+      fb.innerHTML = '<span>💡 Es <b>' + escapeHtml(word.en) + '</b> — ' + escapeHtml(word.es) + '</span>';
+      fb.style.visibility = 'visible';
+      addReplay(fb, word);
+    }
+
+    $('#game-streak').textContent = game.streak >= 3 ? '🔥 ' + game.streak : '';
+    say(word.en);
+    save();
+
+    const round = game;
+    setTimeout(() => {
+      if (!game || !round.isCurrent()) return;  // el jugador salió o empezó otra partida
+      game.i++;
+      nextQuestion();
+    }, ok ? 1300 : 2300);
+  }
+
+  function addReplay(fb, word) {
+    const r = el('button', 'replay', '🔊');
+    r.setAttribute('aria-label', 'Escuchar otra vez');
+    r.addEventListener('click', ev => { ev.stopPropagation(); say(word.en); });
+    fb.appendChild(r);
+  }
+
+  /* =======================================================================
+     8. RESULTADOS
+     ======================================================================= */
+  function finishGame() {
+    if (game.cleanup) { game.cleanup(); game.cleanup = null; }
+    const before = me.stars;
+    me.stars += game.stars;
+    me.plays = (me.plays || 0) + 1;
+    save();
+
+    const pct = game.correct / game.queue.length;
+    $('#res-emo').textContent = pct === 1 ? '🏆' : pct >= 0.7 ? '🎉' : pct >= 0.4 ? '💪' : '🌱';
+    $('#res-title').textContent = pct === 1 ? '¡Perfecto!' : pct >= 0.7 ? '¡Muy bien!' : pct >= 0.4 ? '¡Buen intento!' : '¡A seguir!';
+    $('#res-sub').textContent = pct === 1
+      ? 'Todas correctas, ' + me.name + ' 🤩'
+      : 'Has acertado ' + game.correct + ' de ' + game.queue.length;
+    $('#res-correct').textContent = game.correct + '/' + game.queue.length;
+    $('#res-stars').textContent = '+' + game.stars;
+    $('#res-best').textContent = game.best;
+
+    const wrap = $('#res-review-wrap');
+    const rev = $('#res-review');
+    rev.innerHTML = '';
+    if (game.missed.length) {
+      wrap.hidden = false;
+      game.missed.forEach(w => {
+        const r = el('div', 'r');
+        r.innerHTML = '<span class="e">' + w.emoji + '</span><span class="en">' + escapeHtml(w.en) + '</span>' +
+                      '<span class="es">' + escapeHtml(w.es) + '</span>';
+        const b = el('button', 'replay', '🔊');
+        b.setAttribute('aria-label', 'Escuchar ' + w.en);
+        b.addEventListener('click', () => say(w.en));
+        r.appendChild(b);
+        rev.appendChild(r);
+      });
+    } else {
+      wrap.hidden = true;
+    }
+
+    const newBadges = BADGES.filter(b => before < b.stars && me.stars >= b.stars);
+    const nb = $('#res-new-badges');
+    nb.innerHTML = '';
+    if (newBadges.length) {
+      nb.appendChild(el('div', 'section-title', '¡Medalla nueva!'));
+      const box = el('div', 'badges');
+      newBadges.forEach(b => box.appendChild(el('div', 'badge', '<span>' + b.icon + '</span><span>' + b.name + '</span>')));
+      nb.appendChild(box);
+    }
+
+    syncTopbar();
+    show('screen-results');
+    if (pct >= 0.7 || newBadges.length) { confetti(); beep('ok'); }
+  }
+
+  $('#btn-again').addEventListener('click', () => startGame());
+  $('#btn-menu').addEventListener('click', () => { game = null; renderHome(); show('screen-home'); });
+
+  /* =======================================================================
+     9. INSTALAR COMO APP (PWA)
+     ======================================================================= */
+  let currentScreen = 'screen-profiles';
+  let deferredPrompt = null;
+  const INSTALL_HIDDEN_KEY = 'wp_install_hidden';
+  const installBar = $('#install-bar');
+  const iosSheet = $('#ios-sheet');
+
+  const ua = navigator.userAgent || '';
+  /* iPadOS se hace pasar por Mac: se delata por el táctil. */
+  const isIOS = /iPad|iPhone|iPod/.test(ua) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  /* Dentro de Instagram/Facebook no se puede instalar: no ofrecerlo. */
+  const isInAppBrowser = /FBAN|FBAV|Instagram|Line\/|MicroMessenger/i.test(ua);
+
+  function isInstalled() {
+    return window.matchMedia('(display-mode: standalone)').matches ||
+           window.matchMedia('(display-mode: fullscreen)').matches ||
+           window.navigator.standalone === true;
+  }
+  function hiddenByUser() {
+    try { return localStorage.getItem(INSTALL_HIDDEN_KEY) === '1'; } catch (e) { return false; }
+  }
+  function canOfferInstall() {
+    if (isInstalled() || hiddenByUser() || isInAppBrowser) return false;
+    if (!/^https?:$/.test(location.protocol)) return false;
+    return !!deferredPrompt || isIOS;
+  }
+  /* Solo en las pantallas tranquilas: nunca encima del juego. */
+  function refreshInstallBar() {
+    const quiet = (currentScreen === 'screen-profiles' || currentScreen === 'screen-home');
+    const visible = canOfferInstall() && quiet;
+    installBar.hidden = !visible;
+    document.body.classList.toggle('has-install', visible);
+  }
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    refreshInstallBar();
+  });
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    try { localStorage.removeItem(INSTALL_HIDDEN_KEY); } catch (e) {}
+    refreshInstallBar();
+    confetti();
+  });
+
+  $('#btn-install').addEventListener('click', async () => {
+    if (deferredPrompt) {
+      const evt = deferredPrompt;
+      deferredPrompt = null;
+      evt.prompt();
+      try { await evt.userChoice; } catch (e) {}
+      refreshInstallBar();
+    } else {
+      iosSheet.hidden = false;   /* iPhone / iPad: instrucciones de Safari */
+    }
+  });
+  $('#btn-install-later').addEventListener('click', () => {
+    try { localStorage.setItem(INSTALL_HIDDEN_KEY, '1'); } catch (e) {}
+    refreshInstallBar();
+  });
+  $('#btn-ios-ok').addEventListener('click', () => { iosSheet.hidden = true; });
+  iosSheet.addEventListener('click', e => { if (e.target === iosSheet) iosSheet.hidden = true; });
+
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js', { scope: './' }).catch(() => {});
+    });
+  }
+
+  /* =======================================================================
+     10. ARRANQUE
+     ======================================================================= */
+  load();
+  renderProfiles();
+  if (data.profiles.length === 0) {
+    show('screen-profiles');
+  } else if (data.lastProfileId && data.profiles.some(p => p.id === data.lastProfileId)) {
+    enter(data.lastProfileId);
+  } else {
+    show('screen-profiles');
+  }
+})();
+</script>
+</body>
+</html>
