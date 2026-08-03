@@ -13,7 +13,7 @@ template, and **working reference builds of both screens** you can open in a bro
 | --- | --- |
 | [`setup-interview.html`](setup-interview.html) | The setup interview, working standalone. Answers 11 questions, does the math, prints your finished project instructions with a copy button. |
 | [`tracker.html`](tracker.html) | The tracker dashboard, working standalone. Rings, water, 7-day history, diary, light/dark, backup codes. Installable as a phone app — see [Install it on your phone](#install-it-on-your-phone). |
-| `manifest.webmanifest`, `sw.js`, `icon*.png` | What makes the tracker installable and offline-capable. |
+| `manifest.webmanifest`, `sw.js`, `icon*.webp` | What makes the tracker installable and offline-capable. |
 | [`prompts/setup-interview-prompt-full.txt`](prompts/setup-interview-prompt-full.txt) | The Step 2 prompt, ready to paste into Claude as-is. |
 | [`prompts/setup-interview-prompt.md`](prompts/setup-interview-prompt.md) | The same prompt, annotated. |
 | [`project-instructions-template.md`](project-instructions-template.md) | The block that goes in your project's instructions field, plus notes on the `EMBEDDED` data format. |
@@ -198,7 +198,8 @@ All paths are relative, so the app works from any subdirectory — `/calorie-tra
 or the root of its own host, no edits needed. The service worker sits out `file://` and embedded
 previews (it needs HTTP and a top-level page); everything else still works there.
 
-Icons are generated from `icon.svg` and `icon-maskable.svg`. The maskable variant is full-bleed with
+Icons are generated from `icon.svg` and `icon-maskable.svg` as WebP — a tenth the size of the
+equivalent PNGs, and supported by every browser that installs PWAs. The maskable variant is full-bleed with
 its artwork inside the 80% safe zone, so Android can crop it to whatever shape the launcher uses;
 `apple-touch-icon.png` is full-bleed too, because iOS fills transparent corners with black.
 

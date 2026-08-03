@@ -7,9 +7,9 @@ var SHELL = [
   'tracker.html',
   'setup-interview.html',
   'manifest.webmanifest',
-  'icon-192.png',
-  'icon-512.png',
-  'icon-maskable-512.png',
+  'icon-192.webp',
+  'icon-512.webp',
+  'icon-maskable-512.webp',
   'apple-touch-icon.png'
 ];
 
