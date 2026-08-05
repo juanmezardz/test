@@ -1,0 +1,40 @@
+name: Deploy tracker to GitHub Pages
+
+on:
+  push:
+    branches: [claude/ai-calorie-tracker-build-vbfphi]
+  workflow_dispatch:
+
+# configure-pages needs pages:write to turn Pages on; deploy-pages needs id-token.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # enablement:true switches Pages on for this repo if it isn't already,
+      # so the site publishes without anyone touching repo settings.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      # Publish the tracker directory as the site root, so the short URL
+      # lands straight on the app.
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: calorie-tracker
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
