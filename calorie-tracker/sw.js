@@ -1,6 +1,9 @@
 /* Macro Tracker service worker — offline shell.
    Bump CACHE when you change any shell file. */
 var CACHE = 'macro-tracker-v1';
+// Other apps may share this origin (GitHub Pages puts every project on one
+// hostname), so only ever touch caches that are ours.
+var CACHE_PREFIX = 'macro-tracker-';
 var SHELL = [
   './',
   'index.html',
@@ -27,7 +30,9 @@ self.addEventListener('install', function(e){
 self.addEventListener('activate', function(e){
   e.waitUntil(
     caches.keys().then(function(keys){
-      return Promise.all(keys.map(function(k){ return k === CACHE ? null : caches.delete(k); }));
+      return Promise.all(keys.map(function(k){
+        return (k.indexOf(CACHE_PREFIX) === 0 && k !== CACHE) ? caches.delete(k) : null;
+      }));
     }).then(function(){ return self.clients.claim(); })
   );
 });
