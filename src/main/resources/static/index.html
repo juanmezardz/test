@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+	<meta name="theme-color" content="#0b0b10">
+	<title>CulturaTok · cultura en scroll</title>
+	<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+	<header class="barra-superior">
+		<div class="marca">
+			<span class="marca-punto"></span>
+			CulturaTok
+		</div>
+		<div class="marcador" id="marcador" title="Aciertos en los quizzes">
+			<span id="racha">🔥 0</span>
+			<span class="separador"></span>
+			<span id="aciertos">0/0</span>
+		</div>
+	</header>
+
+	<nav class="categorias" id="categorias" aria-label="Categorías"></nav>
+
+	<main class="feed" id="feed" tabindex="0"></main>
+
+	<div class="vacio oculto" id="vacio">
+		<p>Todavía no has guardado ninguna tarjeta.</p>
+		<button class="boton-fantasma" data-categoria="Todo">Volver al feed</button>
+	</div>
+
+	<footer class="pista" id="pista">Desliza hacia arriba ↑</footer>
+
+	<script src="js/app.js"></script>
+</body>
+</html>
