@@ -137,11 +137,33 @@
   .x:hover{border-color:#EF4444;color:#EF4444}
   .empty-msg{font-size:13px;color:var(--muted);text-align:center;padding:14px 0}
 
-  /* ---------- add food ---------- */
-  .addbtn{width:100%;font:inherit;font-size:14.5px;font-weight:600;padding:13px;border-radius:15px;border:1px dashed var(--line);
-    background:var(--card2);color:var(--muted);cursor:pointer;transition:all .18s;margin-bottom:14px}
-  .addbtn:hover{border-color:var(--accent);color:var(--accent)}
-  .form{display:none;flex-direction:column;gap:9px}
+  /* ---------- log food ---------- */
+  .logcard textarea{width:100%;font:inherit;font-size:15px;padding:13px 14px;border:1px solid var(--line);
+    border-radius:15px;background:var(--bg);color:var(--ink);outline:none;resize:vertical;min-height:74px;
+    transition:border-color .15s,box-shadow .15s}
+  .logcard textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.14)}
+  .logrow{display:flex;gap:8px;margin-top:10px;align-items:center}
+  .logrow .go{flex:1;font:inherit;font-size:15px;font-weight:600;padding:12px;border-radius:13px;border:0;cursor:pointer;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 5px 14px rgba(37,99,235,.3);
+    display:flex;align-items:center;justify-content:center;gap:8px}
+  .logrow .go[disabled]{opacity:.6;cursor:default}
+  .photo{width:46px;height:46px;flex:0 0 auto;border-radius:13px;border:1px solid var(--line);background:var(--card2);
+    color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;padding:0;overflow:hidden}
+  .photo:hover{border-color:var(--accent);color:var(--accent)}
+  .photo img{width:100%;height:100%;object-fit:cover}
+  .photo.has{border-color:var(--accent)}
+  .spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:99px;
+    animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spin{animation-duration:2s}}
+  .aimsg{font-size:12px;line-height:1.5;margin:10px 0 0;padding:9px 11px;border-radius:11px;
+    background:var(--card2);border:1px solid var(--line);color:var(--muted)}
+  .aimsg.bad{border-color:#EF4444;color:#EF4444}
+  .aimsg b{color:var(--ink);font-weight:600}
+  .manual{width:100%;font:inherit;font-size:13px;font-weight:600;padding:10px;border-radius:12px;border:1px dashed var(--line);
+    background:transparent;color:var(--muted);cursor:pointer;transition:all .18s;margin-top:10px}
+  .manual:hover{border-color:var(--accent);color:var(--accent)}
+  .form{display:none;flex-direction:column;gap:9px;margin-top:10px}
   .form.on{display:flex}
   .form input,.form select{width:100%;font:inherit;font-size:14px;padding:11px 12px;border:1px solid var(--line);
     border-radius:12px;background:var(--bg);color:var(--ink);outline:none}
@@ -474,11 +496,23 @@ function render(){
   });
   app.appendChild(chart);
 
-  /* add food */
+  /* log food — describe it or photograph it, the coach does the numbers */
   var add = el(
-    '<div>' +
-      '<button class="addbtn" id="addtoggle">+ Add food</button>' +
-      '<div class="card form" id="form">' +
+    '<div class="card logcard">' +
+      '<h3>Log food</h3>' +
+      '<textarea id="l-text" placeholder="What did you eat? e.g. 3 huevos con una tortilla de harina integral"></textarea>' +
+      '<div class="logrow">' +
+        '<button class="photo' + (pendingPhoto ? ' has' : '') + '" id="l-photo" title="' +
+          (pendingPhoto ? 'Remove photo' : 'Add a photo of your plate') + '">' +
+          (pendingPhoto ? '<img src="' + pendingPhoto.dataUrl + '" alt="Your photo">'
+            : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h3l1.6-2.4A1 1 0 018.4 5h7.2a1 1 0 01.8.4L18 8h3a1 1 0 011 1v9a1 1 0 01-1 1H3a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.5"/></svg>') +
+        '</button>' +
+        '<input type="file" accept="image/*" id="l-file" style="display:none">' +
+        '<button class="go" id="l-go">' + (aiBusy ? '<span class="spin"></span>Working…' : 'Log it') + '</button>' +
+      '</div>' +
+      (aiMessage ? '<p class="aimsg' + (aiMessage.bad ? ' bad' : '') + '">' + aiMessage.html + '</p>' : '') +
+      '<button class="manual" id="addtoggle">Enter the numbers myself</button>' +
+      '<div class="form" id="form">' +
         '<input id="f-name" placeholder="Food name (e.g. Chicken burrito bowl)">' +
         '<div class="r"><input id="f-serv" placeholder="Serving (e.g. 1 bowl)">' +
           '<select id="f-meal">' + MEALS.map(function(m){
@@ -489,14 +523,34 @@ function render(){
       '</div>' +
     '</div>');
   app.appendChild(add);
+
+  var ta = add.querySelector('#l-text');
+  ta.value = pendingText;
+  ta.oninput = function(){ pendingText = ta.value; };
+  ta.onkeydown = function(e){ if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) add.querySelector('#l-go').click(); };
+
+  var file = add.querySelector('#l-file');
+  add.querySelector('#l-photo').onclick = function(){
+    if (pendingPhoto) { pendingPhoto = null; render(); } else file.click();
+  };
+  file.onchange = function(){
+    if (!file.files || !file.files[0]) return;
+    shrinkImage(file.files[0], function(img, err){
+      if (err) { aiMessage = {bad:true, html:'Couldn’t read that image.'}; }
+      else pendingPhoto = img;
+      render();
+    });
+  };
+
+  add.querySelector('#l-go').onclick = function(){ logWithCoach(); };
+
   var form = add.querySelector('#form');
   add.querySelector('#addtoggle').onclick = function(){
     form.classList.toggle('on');
     if (form.classList.contains('on')) add.querySelector('#f-name').focus();
   };
   // default the meal picker to the likely meal for the current hour
-  var hr = new Date().getHours();
-  add.querySelector('#f-meal').value = hr < 11 ? 'breakfast' : hr < 15 ? 'lunch' : hr < 21 ? 'dinner' : 'snacks';
+  add.querySelector('#f-meal').value = mealForNow();
   add.querySelector('#f-save').onclick = function(){
     var name = add.querySelector('#f-name').value.trim();
     var cal  = parseFloat(add.querySelector('#f-cal').value);
@@ -548,6 +602,42 @@ function render(){
     });
   }
   app.appendChild(diary);
+
+  /* coach setup — the API key that powers the estimates */
+  var setup = el(
+    '<div class="card">' +
+      '<button class="exp" id="sexp">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1A1.7 1.7 0 008.9 19a1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1A1.7 1.7 0 004.6 8.9a1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>' +
+        'Coach setup' + (apiKey() ? '' : ' — needed for AI logging') + '<span class="chev">›</span></button>' +
+      '<div class="panel" id="spanel">' +
+        '<input type="password" id="key" placeholder="sk-ant-…" autocomplete="off" spellcheck="false" ' +
+          'style="width:100%;font:inherit;font-size:13px;padding:11px 12px;border:1px solid var(--line);' +
+          'border-radius:12px;background:var(--bg);color:var(--ink);outline:none">' +
+        '<div class="btns"><button id="savekey">Save key</button>' +
+          (apiKey() ? '<button id="clearkey">Remove</button>' : '') + '</div>' +
+        '<p class="hint">Typing a meal or snapping a photo sends it to Claude for the calorie and macro estimate. ' +
+          'That needs your own API key from <b>console.anthropic.com</b> — roughly a cent per meal you log, ' +
+          'a bit more for photos. The key is stored in this browser and goes straight to Anthropic, never ' +
+          'through anyone else; any other page you host on this same domain could read it, so keep the key ' +
+          'to devices you trust. Without a key, everything else still works and you can enter numbers yourself.</p>' +
+      '</div>' +
+    '</div>');
+  app.appendChild(setup);
+  var sexp = setup.querySelector('#sexp'), spanel = setup.querySelector('#spanel');
+  sexp.onclick = function(){
+    sexp.classList.toggle('on'); spanel.classList.toggle('on');
+    if (spanel.classList.contains('on')) setup.querySelector('#key').value = apiKey();
+  };
+  setup.querySelector('#savekey').onclick = function(){
+    var k = setup.querySelector('#key').value.trim();
+    if (!k) { toast('Paste your key first'); return; }
+    try { localStorage.setItem(AIKEY, k); } catch(e){ toast('This browser blocked storage'); return; }
+    toast('Key saved'); aiMessage = null; render();
+  };
+  if (setup.querySelector('#clearkey')) setup.querySelector('#clearkey').onclick = function(){
+    try { localStorage.removeItem(AIKEY); } catch(e){}
+    toast('Key removed'); render();
+  };
 
   /* backup & restore */
   var backup = el(
@@ -635,6 +725,178 @@ function copyText(text, cb){
     var ok = false; try { ok = document.execCommand('copy'); } catch(e){}
     document.body.removeChild(ta); return ok;
   }
+}
+
+/* ==================================================================== *
+ *  AI logging — you describe or photograph the food, Claude returns the
+ *  numbers. The call goes from this page straight to Anthropic with the
+ *  key you saved; there is no server in between. Raw fetch rather than
+ *  the SDK because this file has to stay dependency-free and work offline.
+ * ==================================================================== */
+var AIKEY = 'macrotracker.apikey';
+var API = 'https://api.anthropic.com/v1/messages';
+var MODEL = 'claude-opus-5';
+var pendingText = '', pendingPhoto = null, aiBusy = false, aiMessage = null;
+
+function apiKey(){
+  try { return localStorage.getItem(AIKEY) || ''; } catch(e){ return ''; }
+}
+function mealForNow(){
+  var h = new Date().getHours();
+  return h < 11 ? 'breakfast' : h < 15 ? 'lunch' : h < 21 ? 'dinner' : 'snacks';
+}
+
+// Phone photos are far larger than the estimate needs; shrink before sending.
+function shrinkImage(fileObj, cb){
+  var reader = new FileReader();
+  reader.onerror = function(){ cb(null, true); };
+  reader.onload = function(){
+    var img = new Image();
+    img.onerror = function(){ cb(null, true); };
+    img.onload = function(){
+      var max = 1024, w = img.width, h = img.height;
+      var s = Math.min(1, max / Math.max(w, h));
+      var c = document.createElement('canvas');
+      c.width = Math.round(w * s); c.height = Math.round(h * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      var url = c.toDataURL('image/jpeg', 0.85);
+      cb({dataUrl: url, mediaType: 'image/jpeg', base64: url.split(',')[1]});
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(fileObj);
+}
+
+var FOOD_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['items'],
+  properties: {
+    items: {
+      type: 'array',
+      description: 'One entry per distinct food or drink.',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['name', 'serving', 'meal', 'cal', 'p', 'c', 'f'],
+        properties: {
+          name:    {type:'string',  description:'Food name, in the same language the user wrote in.'},
+          serving: {type:'string',  description:'The amount eaten, e.g. "3 large" or "1 taza".'},
+          meal:    {type:'string',  enum:['breakfast','lunch','dinner','snacks']},
+          cal:     {type:'integer', description:'Calories for the amount eaten.'},
+          p:       {type:'integer', description:'Protein in grams.'},
+          c:       {type:'integer', description:'Carbohydrate in grams.'},
+          f:       {type:'integer', description:'Fat in grams.'}
+        }
+      }
+    },
+    note: {type:'string', description:'One short line, only if you had to assume something. Same language as the user. Empty otherwise.'}
+  }
+};
+
+function coachSystem(){
+  var now = new Date();
+  return 'You estimate nutrition for a personal food diary. Given a description or a photo of a meal, ' +
+    'return one entry per distinct food with its calories and macros for the amount actually eaten.\n\n' +
+    'Estimate from standard reference (USDA-style) values. Be decisive: give one best number per item, ' +
+    'never a range. If a photo is ambiguous about portion size, assume a normal serving and say so in one ' +
+    'short line in "note". Keep item names in the language the user wrote in.\n\n' +
+    'The local time is ' + now.toLocaleTimeString() + '. Use it to pick the meal unless the user says which ' +
+    'meal it was ("desayuno", "for dinner", "as a snack") — then follow the user.';
+}
+
+function estimateFood(cb){
+  var key = apiKey();
+  var content = [];
+  if (pendingPhoto) content.push({
+    type: 'image',
+    source: {type: 'base64', media_type: pendingPhoto.mediaType, data: pendingPhoto.base64}
+  });
+  content.push({type: 'text', text: pendingText.trim() ||
+    'Log the food in this photo. Estimate each item and the portion sizes you can see.'});
+
+  fetch(API, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      // required for calls made straight from a browser page
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: 4000,
+      system: coachSystem(),
+      // low effort: this is a quick lookup, not a reasoning problem
+      output_config: {effort: 'low', format: {type: 'json_schema', schema: FOOD_SCHEMA}},
+      messages: [{role: 'user', content: content}]
+    })
+  }).then(function(res){
+    return res.json().then(function(body){ return {status: res.status, body: body}; });
+  }).then(function(r){
+    if (r.status !== 200) {
+      var m = (r.body && r.body.error && r.body.error.message) || ('HTTP ' + r.status);
+      if (r.status === 401) m = 'That API key was rejected. Check it under Coach setup.';
+      if (r.status === 429) m = 'Rate limited by the API — try again in a moment.';
+      if (r.status === 529) m = 'The API is busy right now — try again in a moment.';
+      return cb(null, m);
+    }
+    if (r.body.stop_reason === 'refusal') return cb(null, 'The model declined that one. Try rewording it.');
+    var text = (r.body.content || []).filter(function(b){ return b.type === 'text'; })
+                                     .map(function(b){ return b.text; }).join('');
+    var parsed;
+    try { parsed = JSON.parse(text); } catch(e){ return cb(null, 'Got an unreadable answer back. Try again.'); }
+    if (!parsed || !parsed.items || !parsed.items.length) return cb(null, 'No food found in that. Try describing it.');
+    cb(parsed, null);
+  }).catch(function(){
+    cb(null, navigator.onLine === false
+      ? 'You’re offline. Estimates need a connection — or enter the numbers yourself.'
+      : 'Couldn’t reach the API. Check your connection and try again.');
+  });
+}
+
+function logWithCoach(){
+  if (aiBusy) return;
+  if (!apiKey()) {
+    aiMessage = {bad:true, html:'Add your API key under <b>Coach setup</b> below to log by description or photo.'};
+    render(); return;
+  }
+  if (!pendingText.trim() && !pendingPhoto) {
+    aiMessage = {bad:true, html:'Describe what you ate, or attach a photo.'};
+    render(); return;
+  }
+
+  aiBusy = true; aiMessage = null; render();
+
+  estimateFood(function(result, err){
+    aiBusy = false;
+    if (err) { aiMessage = {bad:true, html:esc(err)}; render(); return; }
+
+    var added = 0, cals = 0;
+    result.items.forEach(function(it){
+      var meal = MEALS.some(function(m){ return m.k === it.meal; }) ? it.meal : mealForNow();
+      state.log.push({
+        id: 'a' + Date.now().toString(36) + (added++),
+        date: selected,
+        meal: meal,
+        name: String(it.name || 'Food'),
+        serving: String(it.serving || '1 serving'),
+        cal: Math.max(0, Math.round(+it.cal || 0)),
+        p: Math.max(0, Math.round(+it.p || 0)),
+        c: Math.max(0, Math.round(+it.c || 0)),
+        f: Math.max(0, Math.round(+it.f || 0))
+      });
+      cals += Math.max(0, Math.round(+it.cal || 0));
+    });
+
+    aiMessage = {
+      html: 'Logged <b>' + added + (added === 1 ? ' item' : ' items') + '</b>, ' +
+            cals.toLocaleString() + ' cal.' + (result.note ? ' ' + esc(result.note) : '')
+    };
+    pendingText = ''; pendingPhoto = null;
+    save(); render();
+  });
 }
 
 /* ---------------- install as an app ---------------- */
