@@ -12,7 +12,7 @@ template, and **working reference builds of both screens** you can open in a bro
 | File | What it is |
 | --- | --- |
 | [`setup-interview.html`](setup-interview.html) | The setup interview, working standalone. Answers 11 questions, does the math, prints your finished project instructions with a copy button. |
-| [`tracker.html`](tracker.html) | The tracker dashboard, working standalone. Rings, water, 7-day history, diary, light/dark, backup codes. Installable as a phone app — see [Install it on your phone](#install-it-on-your-phone). |
+| [`tracker.html`](tracker.html) | The tracker dashboard, working standalone. Logs food from a description or a photo, plus rings, water, 7-day history, diary, light/dark, and backup codes. Installable as a phone app — see [Install it on your phone](#install-it-on-your-phone). |
 | `manifest.webmanifest`, `sw.js`, `icon*.webp` | What makes the tracker installable and offline-capable. |
 | [`prompts/setup-interview-prompt-full.txt`](prompts/setup-interview-prompt-full.txt) | The Step 2 prompt, ready to paste into Claude as-is. |
 | [`prompts/setup-interview-prompt.md`](prompts/setup-interview-prompt.md) | The same prompt, annotated. |
@@ -124,6 +124,28 @@ you're now looking at a real one — and the service worker keeps it working wit
 > Your log lives in that install's storage. Installing does **not** move data over from the browser
 > tab you were using, so copy your save code first and paste it into Restore in the installed app.
 
+## Logging food in the app
+
+The hosted tracker estimates food itself — you don't have to know any numbers.
+
+- **Type it**: `3 huevos con 1 taza de clara de huevo y una tortilla de harina integral grande` → Log it
+- **Photograph it**: tap the camera button, pick a photo of your plate, then Log it
+- **Enter it yourself**: *Enter the numbers myself* opens the manual form; no key needed
+
+Write in whatever language you like — item names come back in the same one. Say which meal it was
+("de cena", "as a snack") and it uses that; otherwise it picks from the time of day.
+
+### The API key
+
+Estimates are made by Claude, called straight from the page, so the app needs **your own Anthropic
+API key** — get one at [console.anthropic.com](https://console.anthropic.com) and paste it into
+**Coach setup** at the bottom of the tracker. Cost is roughly a cent per meal logged, a bit more for
+photos.
+
+The key is stored in this browser's `localStorage` and sent only to `api.anthropic.com`. Two things
+worth knowing: any other page you host on the same domain can read that storage, so keep the key to
+devices you trust; and estimates need a connection — everything else in the app works offline.
+
 ## Backup and restore
 
 Your data is saved in the browser you use. To protect it, open the Backup & Restore section at the
@@ -186,6 +208,18 @@ water taps, deletions, and anything added with the in-page **+ Add food** form.
 
 Today's date comes from JavaScript and is re-checked every 20 seconds, so the day rolls over on its
 own and past days stay in the 7-day chart. The save code is base64-encoded JSON of the whole state.
+
+### AI logging
+
+One `fetch` to `POST https://api.anthropic.com/v1/messages` per log — no SDK, since the file has to
+stay dependency-free and installable offline. The call sends `anthropic-dangerous-direct-browser-access:
+true` (required for browser-origin requests) with the user's key, `claude-opus-5` at `effort: "low"`,
+and a `json_schema` in `output_config.format` so the reply parses without any string wrangling. Photos
+are downscaled to 1024px and re-encoded as JPEG before upload — a phone original is far larger than
+the estimate needs.
+
+Failures are surfaced in the card rather than swallowed: a rejected key, a rate limit, a refusal, an
+unparseable reply, and being offline each get their own message.
 
 ### PWA bits
 
