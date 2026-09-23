@@ -133,6 +133,9 @@
   .shop-card button.buy:disabled { background: #b9b3a8; box-shadow: 0 3px 0 #8f8a80; cursor: default; }
   .shop-card button.equip { background: var(--accent2); box-shadow: 0 3px 0 #3a87c4; }
   .shop-card button.equipped { background: var(--good); box-shadow: 0 3px 0 #3d8c48; }
+  .shop-card button.upgrade { background: #8e5bd6; box-shadow: 0 3px 0 #6a3fae; font-size: .85rem; }
+  .shop-card button.upgrade:disabled { background: #b9b3a8; box-shadow: 0 3px 0 #8f8a80; cursor: default; }
+  .shop-card .spower { font-size: .8rem; opacity: .75; margin: 2px 4px; min-height: 2.2em; }
   .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
   .badge-card { background: var(--panel); border: 3px solid #ffd76e; border-radius: 18px; padding: 14px 10px; text-align: center; box-shadow: 0 4px 10px #0001; }
   .badge-card.locked { border-color: #e8ddc8; filter: grayscale(1); opacity: .55; }
@@ -154,10 +157,43 @@
   #answer-area { width: 100%; max-width: 900px; margin-top: 8px; display: flex; gap: 10px; align-items: stretch; justify-content: center; flex-wrap: wrap; }
   #answer-display {
     background: var(--panel); border: 4px solid var(--accent); border-radius: 16px;
-    font-size: 2rem; font-weight: bold; min-width: 150px; padding: 4px 18px;
-    display: flex; align-items: center; justify-content: center; letter-spacing: 3px;
+    font-size: 2rem; font-weight: bold; min-width: 230px; padding: 4px 18px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
   }
+  #answer-display .inp { color: var(--accent); min-width: 1.6em; text-align: left; }
+  #answer-display .hint { font-size: 1.1rem; opacity: .55; }
   #answer-display.shake { animation: shake .35s; border-color: var(--bad); }
+  #energy {
+    background: var(--panel); border: 4px solid #ffd24a; border-radius: 16px;
+    font-size: 1.7rem; padding: 4px 10px; display: flex; align-items: center; letter-spacing: -4px;
+  }
+  #energy .off { opacity: .18; filter: grayscale(1); }
+  #energy.empty { animation: blink .8s infinite; border-color: var(--bad); }
+  @keyframes blink { 50% { transform: scale(1.07); } }
+
+  #build-bar {
+    position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 4;
+    display: none; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap;
+    background: #fffdf5ee; padding: 8px 14px; border-radius: 16px; box-shadow: 0 4px 12px #0003;
+    font-weight: bold; max-width: 94%; text-align: center;
+  }
+  #build-bar.show { display: flex; }
+  #tower-picker {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 6;
+    width: min(560px, 94%); max-height: 94%; overflow-y: auto; display: none;
+    background: var(--panel); border-radius: 20px; padding: 14px; box-shadow: 0 10px 30px #0005; text-align: center;
+  }
+  #tower-picker.show { display: block; }
+  .pk-title { font-weight: bold; font-size: 1.2rem; }
+  .pk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 10px 0; }
+  .pk-grid button {
+    font-family: inherit; color: var(--ink); border: 3px solid #e8ddc8; background: #fff; border-radius: 14px;
+    padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .pk-grid button:hover { border-color: var(--accent); }
+  .pk-grid .pk-emoji { font-size: 2rem; }
+  .pk-grid small { font-size: .78rem; opacity: .75; }
+  .pk-tip { font-size: .85rem; opacity: .7; margin-bottom: 8px; }
   @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
   #numpad { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; flex: 1; max-width: 460px; min-width: 280px; }
   #numpad button {
@@ -274,8 +310,11 @@
   <div id="canvas-wrap">
     <canvas id="canvas"></canvas>
     <div id="overlay"><div class="card" id="overlay-card"></div></div>
+    <div id="build-bar"></div>
+    <div id="tower-picker"></div>
   </div>
   <div id="answer-area">
+    <div id="energy"></div>
     <div id="answer-display">&nbsp;</div>
     <div id="numpad">
       <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
@@ -283,7 +322,7 @@
       <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
       <button data-k="0">0</button>
       <button class="back" data-k="back">⌫</button>
-      <button class="ok" data-k="ok">✔ ¡Lanzar!</button>
+      <button class="ok" data-k="ok">✔ ¡Cargar ⚡!</button>
     </div>
   </div>
 </div>
@@ -342,7 +381,7 @@ const SHOP = [
   { id: 'turtle',    cat: 'pet', emoji: '🐢', name: 'Tuga',  price: 220 },
 ];
 const SHOP_CATS = [
-  ['defender', '🛡️ Defensores del huerto'],
+  ['defender', '🛡️ Defensores (todos los que tengas pueden pelear)'],
   ['fruits', '🍎 Comida para lanzar'],
   ['pet', '🐾 Mascotas de compañía'],
 ];
@@ -413,6 +452,8 @@ function ensureDefaults(p) {
   if (!p.items) p.items = { defender: ['dog'], fruits: ['basic'], pet: [] };
   if (!p.equipped) p.equipped = { defender: 'dog', fruits: 'basic', pet: null };
   if (!p.badges) p.badges = {};
+  if (!p.upgrades) p.upgrades = {};  // nivel de mejora de cada defensor
+  if (!p.layouts) p.layouts = {};    // última formación usada en cada nivel
 }
 function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
 function profile() { return db.profiles.find(p => p.id === db.currentId); }
@@ -482,6 +523,7 @@ const sfx = {
   life: () => playNotes([260, 180], 0.2, 'triangle'),
   win:  () => playNotes([523, 659, 784, 1047, 1319], 0.15),
   lose: () => playNotes([330, 262, 196], 0.25, 'triangle'),
+  hit:  () => playNotes([880], 0.05, 'sine', 0.04),
 };
 
 /* ================== NAVEGACIÓN DE PANTALLAS ================== */
@@ -642,15 +684,28 @@ function renderShop() {
       const inUse = p.equipped[cat] === item.id;
       const card = document.createElement('div');
       card.className = 'shop-card';
+      const isDef = cat === 'defender';
+      const lv = isDef ? towerLevel(item.id) : 1;
       let btn;
       if (!owned) btn = `<button class="buy" ${p.coins < item.price ? 'disabled' : ''}>Comprar</button>`;
+      else if (isDef && lv < 3) btn = `<button class="upgrade" ${p.coins < UPGRADE_PRICES[lv] ? 'disabled' : ''}>⬆ ${UPGRADE_TEXT[lv]} · 🪙${UPGRADE_PRICES[lv]}</button>`;
+      else if (isDef) btn = `<button class="equipped">Nivel máximo ✓</button>`;
       else if (inUse) btn = `<button class="equipped">${cat === 'pet' ? 'Me acompaña ✓' : 'En uso ✓'}</button>`;
       else btn = `<button class="equip">Usar</button>`;
+      const priceLine = owned && isDef ? `Nivel ${lv} ${'⭐'.repeat(lv - 1)}` : (item.price === 0 ? 'Gratis' : '🪙 ' + item.price);
       card.innerHTML = `<div class="semoji">${item.emoji}</div><div class="sname">${item.name}</div>
-        <div class="sprice">${item.price === 0 ? 'Gratis' : '🪙 ' + item.price}</div>${btn}`;
+        ${isDef ? `<div class="spower">${TOWERS[item.id].power}</div>` : ''}
+        <div class="sprice">${priceLine}</div>${btn}`;
       card.querySelector('button').addEventListener('click', () => {
         initAudio();
-        if (!owned) {
+        if (owned && isDef) {
+          if (lv >= 3 || p.coins < UPGRADE_PRICES[lv]) return;
+          p.coins -= UPGRADE_PRICES[lv];
+          p.upgrades[item.id] = lv + 1;
+          saveDB();
+          sfx.win();
+          toast(`¡${item.name} ${item.emoji} subió a nivel ${lv + 1}! ${UPGRADE_TEXT[lv]}`);
+        } else if (!owned) {
           if (p.coins < item.price) return;
           p.coins -= item.price;
           p.items[cat].push(item.id);
@@ -750,7 +805,6 @@ function pointAt(dist) {
   }
   return PATH[PATH.length - 1];
 }
-const DEFENDER = { x: 445, y: 322 };
 function distToPath(x, y) {
   let best = 1e9;
   for (const s of SEGS) {
@@ -760,18 +814,55 @@ function distToPath(x, y) {
   return best;
 }
 
+/* ---- defensores: dónde se colocan y qué hace cada uno ---- */
+const SLOTS = [
+  { x: 90,  y: 178 }, { x: 300, y: 178 }, { x: 560, y: 178 }, { x: 800, y: 178 },
+  { x: 270, y: 322 }, { x: 445, y: 322 }, { x: 640, y: 322 }, { x: 780, y: 318 },
+];
+const TOWERS = {
+  dog:     { name: 'Toby',     emoji: '🐶', range: 130, dmg: 1, cd: 0.9, kind: 'single', power: 'Lanza fruta, sencillo y fiel' },
+  cat:     { name: 'Michi',    emoji: '🐱', range: 115, dmg: 1, cd: 0.9, kind: 'double', power: 'Golpea a 2 animalitos a la vez' },
+  owl:     { name: 'Sabia',    emoji: '🦉', range: 210, dmg: 1, cd: 1.1, kind: 'single', power: 'Alcanza muy, muy lejos' },
+  koala:   { name: 'Kimi',     emoji: '🐨', range: 125, dmg: 1, cd: 1.0, kind: 'slow',   power: 'Congela: los hace ir lento' },
+  unicorn: { name: 'Estrella', emoji: '🦄', range: 125, dmg: 1, cd: 1.1, kind: 'splash', power: 'Arcoíris: golpea a todo el grupo' },
+  dragon:  { name: 'Chispa',   emoji: '🐲', range: 135, dmg: 2, cd: 1.0, kind: 'single', power: 'Fuego: doble daño' },
+};
+const UPGRADE_PRICES = [0, 120, 250]; // monedas para pasar a nivel 2 y a nivel 3
+const UPGRADE_TEXT = ['', 'Más alcance', 'Más daño'];
+function towerLevel(id) { const p = profile(); return (p.upgrades && p.upgrades[id]) || 1; }
+function towerStats(id) {
+  const base = TOWERS[id], lv = towerLevel(id);
+  return Object.assign({}, base, { lv, range: base.range * (lv >= 2 ? 1.25 : 1), dmg: base.dmg + (lv >= 3 ? 1 : 0) });
+}
+function ownedDefenders() { return profile().items.defender.filter(id => TOWERS[id]); }
+
+/* ---- animalitos: cada tipo con su reto ---- */
+const ENEMY_TYPES = {
+  normal: { hp: 1,  speed: 1,    size: 40, coins: 2 },
+  fast:   { hp: 1,  speed: 1.75, size: 34, coins: 2, intro: '💨 ¡Animalito veloz! Corre el doble de rápido' },
+  armor:  { hp: 3,  speed: 0.7,  size: 46, coins: 4, intro: '🛡️ ¡Acorazado! Necesita 3 golpes' },
+  split:  { hp: 2,  speed: 0.9,  size: 42, coins: 3, intro: '✂️ ¡Divisor! Al vencerlo se parte en dos' },
+  mini:   { hp: 1,  speed: 1.25, size: 28, coins: 1 },
+  boss:   { hp: 10, speed: 0.5,  size: 64, coins: 15 },
+};
+const ENERGY_MAX = 6;
+
 function levelConfig(wi, li) {
   const speed = 34 + wi * 3 + li * 4; // px/seg
-  if (li === 0) return { count: 8,  speed, interval: 5200, boss: false };
-  if (li === 1) return { count: 12, speed: speed * 1.1, interval: 4300, boss: false };
-  return { count: 6, speed, interval: 4600, boss: true };
+  const maxTowers = Math.min(5, 3 + Math.floor(wi / 3));
+  const extra = wi >= 4 ? ['fast', 'armor'] : [];
+  let list;
+  if (li === 0) list = ['normal', 'normal', 'normal', 'fast', 'normal', 'fast', 'normal', 'normal'].concat(extra);
+  else if (li === 1) list = ['normal', 'normal', 'fast', 'armor', 'split', 'normal', 'fast', 'armor', 'split', 'normal'].concat(extra);
+  else list = ['normal', 'fast', 'armor', 'split', 'fast', 'normal'];
+  return { speed, maxTowers, list, boss: li === LEVELS_PER_WORLD - 1, interval: li === 1 ? 3900 : 4400 };
 }
 
 const game = {
-  running: false, wi: 0, li: 0, world: null, cfg: null,
-  enemies: [], projectiles: [], particles: [],
-  spawned: 0, spawnTimer: 0, lives: 3, coins: 0, answered: 0,
-  input: '', lastTs: 0, bossSpawned: false, decoSpots: [],
+  running: false, phase: 'build', wi: 0, li: 0, world: null, cfg: null,
+  enemies: [], projectiles: [], particles: [], towers: [], queue: [],
+  spawnTimer: 0, lives: 3, coins: 0, energy: 0, q: null, seenKinds: {},
+  input: '', lastTs: 0, decoSpots: [], runFast: 0, runFails: 0, escaped: 0,
 };
 
 function startGame(wi, li) {
@@ -779,9 +870,12 @@ function startGame(wi, li) {
   game.wi = wi; game.li = li; game.world = w;
   game.cfg = levelConfig(wi, li);
   game.enemies = []; game.projectiles = []; game.particles = [];
-  game.spawned = 0; game.spawnTimer = 500; game.lives = 3; game.coins = 0;
-  game.answered = 0; game.escaped = 0; game.input = ''; game.bossSpawned = false;
-  game.runFast = 0; game.runFails = 0;
+  game.queue = game.cfg.list.slice();
+  if (game.cfg.boss) game.queue.push('boss');
+  game.spawnTimer = 1500; game.lives = 3; game.coins = 0; game.energy = 3;
+  game.input = ''; game.q = null; game.seenKinds = {};
+  game.runFast = 0; game.runFails = 0; game.escaped = 0;
+  game.phase = 'build';
   // decoraciones en posiciones pseudo-aleatorias fijas por mundo, sobre la isla
   game.decoSpots = [];
   let seed = wi * 7 + 13;
@@ -796,66 +890,169 @@ function startGame(wi, li) {
     const s = base + rnd() * varr;
     if (distToPath(x, y) < 30 + s * 0.3) continue;
     if (x < 165 && y > 275 && y < 360) continue;                       // estanque
-    if (Math.hypot(x - DEFENDER.x, y - DEFENDER.y) < 75) continue;     // defensor
     if (x > 800 && y > 330) continue;                                  // huerto
+    // los árboles crecen hacia arriba: que no tapen los puntos de defensores
+    if (SLOTS.some(sl => Math.abs(sl.x - x) < 42 + s * 0.3 && y - sl.y > -40 && y - sl.y < 40 + s * 1.3)) continue;
     if (game.decoSpots.some(d => Math.hypot(d.x - x, d.y - y) < (d.s + s) * 0.55)) continue;
     game.decoSpots.push({ x, y, s, type, phase: rnd() * 6.28 });
   }
   game.decoSpots.sort((a, b) => a.y - b.y);
+  // restaurar la última formación usada en este nivel
+  const owned = ownedDefenders();
+  const saved = (profile().layouts || {})[`w${wi}-l${li}`] || [];
+  game.towers = [];
+  for (const s of saved) {
+    if (owned.includes(s.id) && SLOTS[s.slot] && game.towers.length < game.cfg.maxTowers) addTower(s.slot, s.id);
+  }
   document.getElementById('overlay').classList.remove('show');
+  closePicker();
   document.getElementById('hud-level').textContent =
     `${w.deco} ${w.name} · ${li === LEVELS_PER_WORLD - 1 ? '👑 Jefe' : 'Nivel ' + (li + 1)}`;
-  updateHud(); updateAnswerDisplay();
+  updateHud(); updateAnswerDisplay(); updateEnergy(); renderBuildBar();
   show('screen-game');
   game.running = true;
   game.lastTs = performance.now();
   requestAnimationFrame(loop);
-  if (wi === 0 && li === 0) toast('Escribe la respuesta y pulsa ✔ para lanzar comida 🍎');
+  if (!game.towers.length) toast('Toca un círculo ➕ del mapa para poner a un defensor');
 }
 
-function totalToAnswer() { return game.cfg.count + (game.cfg.boss ? 5 : 0); }
+/* ---- fase de preparación: colocar defensores ---- */
+function addTower(slot, id) {
+  game.towers.push({ slot, id, x: SLOTS[slot].x, y: SLOTS[slot].y, cd: 0, fireT: 0, s: towerStats(id) });
+}
+function placeTower(slot, id) {
+  if (game.phase !== 'build' || game.towers.length >= game.cfg.maxTowers) return false;
+  if (!TOWERS[id] || game.towers.some(t => t.slot === slot)) return false;
+  addTower(slot, id);
+  sfx.ok();
+  renderBuildBar();
+  return true;
+}
+function removeTower(slot) {
+  game.towers = game.towers.filter(t => t.slot !== slot);
+  renderBuildBar();
+}
+function renderBuildBar() {
+  const bar = document.getElementById('build-bar');
+  if (game.phase !== 'build') { bar.classList.remove('show'); return; }
+  const n = game.towers.length, max = game.cfg.maxTowers;
+  bar.innerHTML = `<span>🛡️ Coloca tus defensores: <b>${n}/${max}</b></span>
+    <button class="btn small" id="btn-start-waves" ${n ? '' : 'disabled'}>▶ ¡Empezar!</button>`;
+  bar.classList.add('show');
+  document.getElementById('btn-start-waves').addEventListener('click', startWaves);
+}
+function openPicker(slot) {
+  const pk = document.getElementById('tower-picker');
+  const owned = ownedDefenders();
+  pk.innerHTML = `<div class="pk-title">¿Quién defiende aquí?</div><div class="pk-grid">` +
+    owned.map(id => {
+      const s = towerStats(id);
+      return `<button data-id="${id}"><span class="pk-emoji">${s.emoji}</span>
+        <b>${s.name}${s.lv > 1 ? ' ' + '⭐'.repeat(s.lv - 1) : ''}</b><small>${s.power}</small></button>`;
+    }).join('') + `</div>` +
+    (owned.length < Object.keys(TOWERS).length ? '<div class="pk-tip">🛒 Consigue más defensores en la tienda</div>' : '') +
+    `<button class="btn blue small" id="pk-cancel">Cancelar</button>`;
+  pk.classList.add('show');
+  pk.querySelectorAll('button[data-id]').forEach(b => b.addEventListener('click', () => {
+    placeTower(slot, b.dataset.id);
+    closePicker();
+  }));
+  document.getElementById('pk-cancel').addEventListener('click', closePicker);
+}
+function closePicker() { document.getElementById('tower-picker').classList.remove('show'); }
+canvas.addEventListener('click', ev => {
+  if (!game.running || game.phase !== 'build') return;
+  initAudio();
+  const r = canvas.getBoundingClientRect();
+  const x = (ev.clientX - r.left) * W / r.width, y = (ev.clientY - r.top) * H / r.height;
+  const i = SLOTS.findIndex(s => Math.hypot(s.x - x, s.y - y) < 38);
+  if (i < 0) return;
+  if (game.towers.some(t => t.slot === i)) { removeTower(i); return; }
+  if (game.towers.length >= game.cfg.maxTowers) {
+    toast(`Máximo ${game.cfg.maxTowers} defensores aquí. Toca uno para quitarlo.`);
+    return;
+  }
+  openPicker(i);
+});
+function startWaves() {
+  if (game.phase !== 'build' || !game.towers.length) return;
+  const p = profile();
+  if (!p.layouts) p.layouts = {};
+  p.layouts[`w${game.wi}-l${game.li}`] = game.towers.map(t => ({ slot: t.slot, id: t.id }));
+  saveDB();
+  game.phase = 'play';
+  closePicker();
+  renderBuildBar();
+  newQuestion();
+  updateEnergy(); updateHud();
+  if (game.wi === 0 && game.li === 0) toast('Contesta bien para cargar ⚡: ¡tus defensores la usan para disparar!');
+}
+
+function remaining() { return game.queue.length + game.enemies.filter(e => !e.happy).length; }
 function updateHud() {
-  document.getElementById('hud-lives').textContent = '🥬'.repeat(game.lives) + '🥀'.repeat(3 - game.lives);
+  document.getElementById('hud-lives').textContent = '🥬'.repeat(Math.max(0, game.lives)) + '🥀'.repeat(3 - Math.max(0, game.lives));
   document.getElementById('hud-coins').textContent = `🪙 ${game.coins}`;
-  document.getElementById('hud-wave').textContent = `🐾 ${game.answered + game.escaped}/${totalToAnswer()}`;
+  document.getElementById('hud-wave').textContent = `🐾 quedan ${remaining()}`;
 }
 
-function spawnEnemy() {
-  const w = game.world;
-  const fact = pickFact(w.table);
-  const emoji = w.enemy === 'MIX' ? MIX_ENEMIES[Math.floor(Math.random() * MIX_ENEMIES.length)] : w.enemy;
-  game.enemies.push({
-    type: 'normal', emoji, fact, answer: fact.a * fact.b,
-    dist: 0, speed: game.cfg.speed * (0.92 + Math.random() * 0.16),
-    baseSpeed: game.cfg.speed, happy: false, happyT: 0, fails: 0, targetSince: null,
-  });
+function spawnEnemy(kind, dist = 0, label = null) {
+  const w = game.world, T = ENEMY_TYPES[kind];
+  const emoji = kind === 'boss' ? w.boss
+    : (w.enemy === 'MIX' ? MIX_ENEMIES[Math.floor(Math.random() * MIX_ENEMIES.length)] : w.enemy);
+  const hp = kind === 'boss' ? T.hp + game.wi : T.hp;
+  const e = {
+    kind, emoji, hp, hpMax: hp, pending: 0, dist, size: T.size, coins: T.coins, label,
+    speed: game.cfg.speed * T.speed * (0.92 + Math.random() * 0.16),
+    slowT: 0, hitT: 0, happy: false, happyT: 0,
+  };
+  if (kind === 'split') {
+    // un número con más de una forma de multiplicarse: al vencerlo se parte en sus factores
+    let f = pickFact(w.table);
+    for (let i = 0; i < 6 && Math.min(f.a, f.b) < 2; i++) f = pickFact(w.table);
+    e.n = f.a * f.b;
+    e.pairs = factorPairs(e.n);
+    e.label = '✂️' + e.n;
+  }
+  game.enemies.push(e);
+  if (T.intro && !game.seenKinds[kind]) toast(T.intro);
+  game.seenKinds[kind] = true;
+  return e;
 }
-function spawnBoss() {
-  const fact = pickFact(game.world.table);
-  game.enemies.push({
-    type: 'boss', emoji: game.world.boss, fact, answer: fact.a * fact.b,
-    dist: 0, speed: game.cfg.speed * 0.55, baseSpeed: game.cfg.speed * 0.55,
-    happy: false, happyT: 0, fails: 0, targetSince: null, hp: 5, hpMax: 5,
-  });
-}
-function frontmost() {
-  let best = null;
-  for (const e of game.enemies) if (!e.happy && (!best || e.dist > best.dist)) best = e;
-  return best;
+function factorPairs(n) {
+  const pairs = [];
+  for (let i = 2; i * i <= n; i++) if (n % i === 0 && n / i <= 10) pairs.push([i, n / i]);
+  if (!pairs.length) pairs.push([1, n]);
+  return pairs;
 }
 
-/* ---- entrada de respuestas ---- */
+/* ---- preguntas y energía ---- */
+function newQuestion() {
+  const f = pickFact(game.world.table);
+  game.q = { a: f.a, b: f.b, answer: f.a * f.b, since: performance.now(), fails: 0 };
+  game.input = '';
+  updateAnswerDisplay();
+}
 function updateAnswerDisplay() {
-  document.getElementById('answer-display').innerHTML = game.input || '&nbsp;';
+  const d = document.getElementById('answer-display');
+  if (!game.q) { d.innerHTML = game.phase === 'build' ? '🛡️ ¡Prepárate!' : '&nbsp;'; return; }
+  const hint = game.q.fails >= 2 ? `<span class="hint">(es ${game.q.answer})</span>` : '';
+  d.innerHTML = `<span>${game.q.a} × ${game.q.b} =</span><span class="inp">${game.input || '?'}</span>${hint}`;
+}
+function updateEnergy() {
+  const el = document.getElementById('energy');
+  el.innerHTML = '⚡'.repeat(game.energy) + '<span class="off">' + '⚡'.repeat(ENERGY_MAX - game.energy) + '</span>';
+  el.classList.toggle('empty', game.phase === 'play' && game.energy === 0);
 }
 function pressKey(k) {
   if (!game.running) return;
   initAudio();
+  if (game.phase !== 'play') { if (k === 'ok') startWaves(); return; }
   if (k === 'back') game.input = game.input.slice(0, -1);
   else if (k === 'ok') submitAnswer();
   else if (game.input.length < 3) game.input += k;
   updateAnswerDisplay();
 }
+document.getElementById('answer-display').addEventListener('animationend', ev => ev.currentTarget.classList.remove('shake'));
 document.getElementById('numpad').addEventListener('click', ev => {
   const b = ev.target.closest('button');
   if (b) pressKey(b.dataset.k);
@@ -868,71 +1065,76 @@ window.addEventListener('keydown', ev => {
 });
 
 function submitAnswer() {
-  const target = frontmost();
-  if (!target || game.input === '') return;
-  const p = profile();
-  const st = statFor(p, target.fact.a, target.fact.b);
-  if (parseInt(game.input, 10) === target.answer) {
+  const q = game.q;
+  if (!q || game.input === '') return;
+  const st = statFor(profile(), q.a, q.b);
+  if (parseInt(game.input, 10) === q.answer) {
     st.ok++; st.streak++;
-    const fast = target.targetSince && (performance.now() - target.targetSince) < 3000;
-    if (fast) game.runFast++;
-    if (target.type === 'boss') {
-      target.hp--;
-      target.dist = Math.max(0, target.dist - 90); // retrocede
-      game.answered++;
-      game.coins += fast ? 4 : 2;
-      spawnParticles(target, fast);
-      fast ? sfx.crit() : sfx.ok();
-      if (target.hp <= 0) {
-        target.happy = true; target.happyT = 0; game.coins += 10;
-      } else {
-        const f = pickFact(game.world.table);
-        target.fact = f; target.answer = f.a * f.b; target.fails = 0;
-        target.targetSince = performance.now();
-      }
-    } else {
-      target.happy = true; target.happyT = 0;
-      game.answered++;
-      game.coins += fast ? 4 : 2;
-      spawnParticles(target, fast);
-      fast ? sfx.crit() : sfx.ok();
-    }
-    launchFruit(target);
-    if (fast) floatText(target, '¡Rápido! ×2', '#ff8a3d');
+    const fast = q.fails === 0 && performance.now() - q.since < 3000;
+    if (fast) { game.runFast++; game.coins++; }
+    const gain = fast ? 2 : 1;
+    const room = ENERGY_MAX - game.energy;
+    game.energy = Math.min(ENERGY_MAX, game.energy + gain);
+    if (room < gain) game.coins++; // con la energía llena, lo que sobra se vuelve moneda
+    fast ? sfx.crit() : sfx.ok();
+    floatAt(W / 2, 460, fast ? `¡Rápido! +${gain}⚡` : `+${gain}⚡`, fast ? '#ff8a3d' : '#e0a800');
+    newQuestion();
   } else {
     st.fail++; st.streak = 0;
-    target.fails++;
-    game.runFails++;
-    target.speed = Math.min(target.baseSpeed * 1.6, target.speed * 1.15); // se apura un poquito
+    q.fails++; game.runFails++;
     sfx.bad();
     const disp = document.getElementById('answer-display');
     disp.classList.remove('shake'); void disp.offsetWidth; disp.classList.add('shake');
+    game.input = '';
+    updateAnswerDisplay();
   }
-  game.input = '';
-  updateAnswerDisplay();
-  updateHud();
+  updateEnergy(); updateHud();
 }
 
-/* ---- efectos ---- */
+/* ---- disparos y daño ---- */
 function fruitSet() {
   const it = shopItem(profile().equipped.fruits);
   return (it && it.set) || shopItem('basic').set;
-}
-function defenderEmoji() {
-  const it = shopItem(profile().equipped.defender);
-  return it ? it.emoji : '🐶';
 }
 function petEmoji() {
   const id = profile().equipped.pet;
   const it = id && shopItem(id);
   return it ? it.emoji : null;
 }
-function launchFruit(target) {
-  const set = fruitSet();
-  game.projectiles.push({
-    x: DEFENDER.x, y: DEFENDER.y - 20, target,
-    emoji: set[Math.floor(Math.random() * set.length)], t: 0,
-  });
+function fireAt(t, e) {
+  const s = t.s;
+  let emoji;
+  if (s.kind === 'slow') emoji = '❄️';
+  else if (s.kind === 'splash') emoji = '🌈';
+  else if (t.id === 'dragon') emoji = '🔥';
+  else { const set = fruitSet(); emoji = set[Math.floor(Math.random() * set.length)]; }
+  e.pending += s.dmg;
+  game.projectiles.push({ x: t.x, y: t.y - 20, target: e, dmg: s.dmg, kind: s.kind, emoji });
+}
+function hitEnemy(e, dmg) {
+  if (e.happy) return;
+  e.hp -= dmg; e.hitT = 0.15;
+  if (e.hp > 0) {
+    if (e.kind === 'boss' && !e.enraged && e.hp <= e.hpMax / 2) {
+      // segunda fase del jefe: se apura y llama refuerzos
+      e.enraged = true; e.speed *= 1.5;
+      toast(`😠 ¡${e.emoji} se enfureció y llamó refuerzos!`);
+      spawnEnemy('fast', Math.max(0, e.dist - 50));
+      spawnEnemy('fast', Math.max(0, e.dist - 95));
+      sfx.life();
+    }
+    return;
+  }
+  e.happy = true; e.happyT = 0;
+  game.coins += e.coins;
+  spawnParticles(e, e.kind === 'boss');
+  if (e.kind === 'split') {
+    const p1 = e.pairs[0], p2 = e.pairs[1] || e.pairs[0];
+    spawnEnemy('mini', e.dist, `${p1[0]}×${p1[1]}`);
+    spawnEnemy('mini', Math.max(0, e.dist - 24), `${p2[0]}×${p2[1]}`);
+    floatText(e, `${e.n} = ${p1[0]}×${p1[1]}` + (e.pairs[1] ? ` = ${p2[0]}×${p2[1]}` : ''), '#7a3cc9');
+  }
+  updateHud();
 }
 function spawnParticles(e, crit) {
   const pos = pointAt(e.dist);
@@ -946,7 +1148,10 @@ function spawnParticles(e, crit) {
 }
 function floatText(e, text, color) {
   const pos = pointAt(e.dist);
-  game.particles.push({ x: pos.x, y: pos.y - 55, vx: 0, vy: -30, life: 1.4, text, color });
+  floatAt(pos.x, pos.y - 55, text, color);
+}
+function floatAt(x, y, text, color) {
+  game.particles.push({ x, y, vx: 0, vy: -30, life: 1.4, text, color });
 }
 
 /* ---- bucle principal ---- */
@@ -960,33 +1165,39 @@ function loop(ts) {
 }
 
 function update(dt) {
-  // aparición de enemigos
-  game.spawnTimer -= dt * 1000;
-  if (game.spawnTimer <= 0) {
-    if (game.spawned < game.cfg.count) {
-      spawnEnemy(); game.spawned++;
-      game.spawnTimer = game.cfg.interval * (0.85 + Math.random() * 0.3);
-    } else if (game.cfg.boss && !game.bossSpawned && game.enemies.every(e => e.happy || e.dist <= 0)) {
-      // el jefe entra cuando ya no quedan animalitos activos
-      if (game.enemies.filter(e => !e.happy).length === 0) {
-        spawnBoss(); game.bossSpawned = true;
-        toast(`¡Cuidado! ¡Llega el jefe ${game.world.boss}!`);
+  // partículas (también durante la preparación)
+  for (const pa of game.particles) {
+    pa.x += pa.vx * dt; pa.y += pa.vy * dt; pa.vy += 30 * dt; pa.life -= dt;
+  }
+  game.particles = game.particles.filter(pa => pa.life > 0);
+  if (game.phase !== 'play') return;
+
+  // aparición de animalitos; el jefe espera a que el camino quede libre
+  if (game.queue.length) {
+    game.spawnTimer -= dt * 1000;
+    if (game.spawnTimer <= 0) {
+      const kind = game.queue[0];
+      if (kind === 'boss' && game.enemies.some(e => !e.happy)) {
+        game.spawnTimer = 400;
+      } else {
+        game.queue.shift();
+        spawnEnemy(kind);
+        if (kind === 'boss') toast(`¡Cuidado! ¡Llega el jefe ${game.world.boss}!`);
+        game.spawnTimer = game.cfg.interval * (0.85 + Math.random() * 0.3);
+        updateHud();
       }
-      game.spawnTimer = 500;
     }
   }
 
-  // el objetivo actual empieza su cronómetro (para el bono de rapidez)
-  const target = frontmost();
-  if (target && !target.targetSince) target.targetSince = performance.now();
-
-  // mover enemigos
+  // mover animalitos
   for (const e of game.enemies) {
     if (e.happy) { e.happyT += dt; continue; }
-    e.dist += e.speed * dt;
+    if (e.slowT > 0) e.slowT -= dt;
+    if (e.hitT > 0) e.hitT -= dt;
+    e.dist += e.speed * (e.slowT > 0 ? 0.45 : 1) * dt;
     if (e.dist >= PATH_LEN) {
-      e.happy = true; e.happyT = 10; // lo saca sin corazones
-      if (e.type === 'boss') { game.lives = 0; } else { game.lives--; game.escaped++; }
+      e.happy = true; e.happyT = 10; // llegó al huerto: se retira sin corazones
+      if (e.kind === 'boss') game.lives = 0; else { game.lives--; game.escaped++; }
       sfx.life();
       updateHud();
       if (game.lives <= 0) { endLevel(false); return; }
@@ -994,28 +1205,50 @@ function update(dt) {
   }
   game.enemies = game.enemies.filter(e => !e.happy || e.happyT < 0.9);
 
-  // frutas volando
+  // los defensores disparan solos al que va más adelantado dentro de su alcance (1⚡ por disparo)
+  for (const t of game.towers) {
+    if (t.cd > 0) t.cd -= dt;
+    if (t.fireT > 0) t.fireT -= dt;
+    if (t.cd > 0 || game.energy < 1) continue;
+    const inRange = game.enemies.filter(e => {
+      if (e.happy || e.hp - e.pending <= 0) return false;
+      const pos = pointAt(e.dist);
+      return Math.hypot(pos.x - t.x, pos.y - t.y) <= t.s.range;
+    }).sort((a, b) => b.dist - a.dist);
+    if (!inRange.length) continue;
+    const targets = t.s.kind === 'double' ? inRange.slice(0, 2) : [inRange[0]];
+    for (const e of targets) fireAt(t, e);
+    game.energy--; t.cd = t.s.cd; t.fireT = 0.25;
+    updateEnergy();
+  }
+
+  // proyectiles
   for (const pr of game.projectiles) {
-    const pos = pointAt(pr.target.dist);
-    const dx = pos.x - pr.x, dy = (pos.y - 24) - pr.y;
+    const e = pr.target;
+    if (e.happy) { pr.done = true; continue; }
+    const pos = pointAt(e.dist);
+    const dx = pos.x - pr.x, dy = (pos.y - 20) - pr.y;
     const d = Math.hypot(dx, dy);
     const step = 520 * dt;
-    if (d < step || d < 6) { pr.done = true; }
-    else { pr.x += dx / d * step; pr.y += dy / d * step; }
+    if (d > step && d > 6) { pr.x += dx / d * step; pr.y += dy / d * step; continue; }
+    pr.done = true;
+    e.pending -= pr.dmg;
+    if (pr.kind === 'splash') {
+      for (const o of game.enemies.slice()) {
+        if (o.happy) continue;
+        const op = pointAt(o.dist);
+        if (Math.hypot(op.x - pos.x, op.y - pos.y) <= 60) hitEnemy(o, pr.dmg);
+      }
+    } else {
+      if (pr.kind === 'slow') e.slowT = 2.5;
+      hitEnemy(e, pr.dmg);
+    }
+    sfx.hit();
   }
   game.projectiles = game.projectiles.filter(pr => !pr.done);
 
-  // partículas
-  for (const pa of game.particles) {
-    pa.x += pa.vx * dt; pa.y += pa.vy * dt; pa.vy += 30 * dt; pa.life -= dt;
-  }
-  game.particles = game.particles.filter(pa => pa.life > 0);
-
-  // ¿victoria? (los escapados también cuentan como resueltos: si no, el nivel nunca termina)
-  const done = game.spawned >= game.cfg.count && (!game.cfg.boss || game.bossSpawned);
-  if (done && game.enemies.length === 0) {
-    endLevel(true);
-  }
+  // ¿victoria? no quedan animalitos por salir ni en el camino
+  if (!game.queue.length && game.enemies.length === 0) endLevel(true);
 }
 
 /* ---- dibujo: isla flotante estilo cartoon ---- */
@@ -1577,71 +1810,104 @@ function draw() {
   ctx.font = '22px serif';
   ctx.fillText('🥕🥬', 858, 412);
 
-  // defensor + mascota
-  const bounce = Math.sin(performance.now() / 300) * 3;
-  ctx.fillStyle = '#00000016';
-  ctx.beginPath(); ctx.ellipse(DEFENDER.x, DEFENDER.y + 22, 26, 8, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#000';
-  ctx.font = '46px serif';
-  ctx.fillText(defenderEmoji(), DEFENDER.x, DEFENDER.y + bounce);
-  ctx.font = '18px serif';
-  ctx.fillText(fruitSet()[0], DEFENDER.x + 26, DEFENDER.y - 22 + bounce);
-  const pet = petEmoji();
-  if (pet) {
-    ctx.font = '24px serif';
-    ctx.fillText(pet, DEFENDER.x - 40, DEFENDER.y + 12 - bounce);
+  // preparación: alcance de cada defensor y círculos libres para colocar
+  const now = performance.now();
+  if (game.phase === 'build') {
+    ctx.setLineDash([8, 6]);
+    for (const tw of game.towers) {
+      ctx.fillStyle = '#ffffff26'; ctx.strokeStyle = '#ffffffaa'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(tw.x, tw.y, tw.s.range, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+    const full = game.towers.length >= game.cfg.maxTowers;
+    ctx.globalAlpha = full ? 0.35 : 0.7 + Math.sin(now / 280) * 0.25;
+    SLOTS.forEach((s, i) => {
+      if (game.towers.some(tw => tw.slot === i)) return;
+      ctx.fillStyle = '#ffffff66'; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(s.x, s.y, 26, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#4a3728';
+      ctx.font = "bold 30px 'Comic Sans MS', sans-serif";
+      ctx.fillText('+', s.x, s.y + 1);
+    });
+    ctx.globalAlpha = 1;
+    ctx.setLineDash([]);
   }
 
-  // enemigos (los más atrás primero)
+  // defensores sobre su plataforma
+  for (const tw of game.towers) {
+    const hop = tw.fireT > 0 ? -7 : Math.sin(now / 320 + tw.slot) * 2;
+    ctx.fillStyle = '#00000022';
+    ctx.beginPath(); ctx.ellipse(tw.x, tw.y + 20, 28, 9, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#b98a4f';
+    ctx.beginPath(); ctx.ellipse(tw.x, tw.y + 16, 24, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e8cf9a';
+    ctx.beginPath(); ctx.ellipse(tw.x, tw.y + 14, 20, 6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.font = '40px serif';
+    ctx.fillText(tw.s.emoji, tw.x, tw.y - 4 + hop);
+    if (tw.s.lv > 1) { ctx.font = '11px serif'; ctx.fillText('⭐'.repeat(tw.s.lv - 1), tw.x, tw.y + 30); }
+  }
+  const pet = petEmoji();
+  if (pet && game.towers.length) {
+    const t0 = game.towers[0];
+    ctx.font = '22px serif';
+    ctx.fillText(pet, t0.x - 34, t0.y + 6 - Math.sin(now / 300) * 3);
+  }
+
+  // animalitos (los más atrás primero)
   const sorted = [...game.enemies].sort((a, b) => a.dist - b.dist);
-  const tgt = frontmost();
   for (const e of sorted) {
     const pos = pointAt(e.dist);
-    const isBoss = e.type === 'boss';
-    const size = isBoss ? 62 : 40;
+    const size = e.size * (e.hitT > 0 ? 1.12 : 1);
     let y = pos.y;
     if (e.happy) y -= e.happyT * 60;
     if (!e.happy) {
       ctx.fillStyle = '#00000016';
-      ctx.beginPath(); ctx.ellipse(pos.x, pos.y + size * 0.42, size * 0.42, size * 0.13, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(pos.x, pos.y + e.size * 0.42, e.size * 0.42, e.size * 0.13, 0, 0, Math.PI * 2); ctx.fill();
+      if (e.slowT > 0) {
+        ctx.fillStyle = '#9fd4ff66';
+        ctx.beginPath(); ctx.arc(pos.x, pos.y, e.size * 0.62, 0, Math.PI * 2); ctx.fill();
+      }
     }
     ctx.globalAlpha = e.happy ? Math.max(0, 1 - e.happyT) : 1;
-    const wob = Math.sin(performance.now() / 180 + e.dist) * (e.happy ? 0 : 2);
+    const wob = Math.sin(now / 180 + e.dist) * (e.happy ? 0 : 2);
     ctx.fillStyle = '#000'; // los emoji heredan el alfa del fillStyle: opaco siempre
+    if (e.kind === 'fast' && !e.happy) { ctx.font = '18px serif'; ctx.fillText('💨', pos.x - e.size * 0.7, y + 4); }
     ctx.font = `${size}px serif`;
     ctx.fillText(e.emoji, pos.x, y + wob);
     if (e.happy && e.happyT < 5) { ctx.font = '20px serif'; ctx.fillText('💖', pos.x + 20, y - 24); }
 
-    // burbuja con la multiplicación
     if (!e.happy) {
-      const isTarget = e === tgt;
-      const label = `${e.fact.a}×${e.fact.b}`;
-      const hint = e.fails >= 2 ? ` = ${e.answer}` : '';
-      ctx.font = `bold ${isTarget ? 21 : 15}px 'Comic Sans MS', sans-serif`;
-      const tw = ctx.measureText(label + hint).width + 18;
-      const bh = isTarget ? 32 : 24;
-      const by = y - size / 2 - bh - 6;
-      const bx = Math.max(tw / 2 + 4, Math.min(pos.x, W - tw / 2 - 4)); // no salirse del borde
-      ctx.fillStyle = isTarget ? '#fff3b0' : '#ffffffee';
-      ctx.strokeStyle = isTarget ? '#ff8a3d' : '#00000022';
-      ctx.lineWidth = isTarget ? 3 : 1.5;
-      roundRect(bx - tw / 2, by, tw, bh, 10);
-      ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#4a3728';
-      ctx.fillText(label + hint, bx, by + bh / 2 + 1);
-      // vida del jefe
-      if (isBoss) {
-        ctx.font = '13px serif';
-        const pips = '🟢'.repeat(e.hp) + '⚪'.repeat(e.hpMax - e.hp);
-        ctx.fillText(pips, bx, by - 12);
+      let top = y - e.size / 2 - 8;
+      // barra de vida para los que aguantan más de un golpe
+      if (e.hpMax > 1) {
+        const bw = Math.max(36, e.size * 0.9), bh = 7;
+        const bx = pos.x - bw / 2;
+        ctx.fillStyle = '#00000055';
+        roundRect(bx - 1, top - bh - 1, bw + 2, bh + 2, 4); ctx.fill();
+        ctx.fillStyle = e.enraged ? '#ff5252' : (e.kind === 'boss' ? '#ffb300' : '#5fce6b');
+        roundRect(bx, top - bh, bw * Math.max(0, e.hp) / e.hpMax, bh, 3); ctx.fill();
+        if (e.kind === 'armor') { ctx.fillStyle = '#000'; ctx.font = '14px serif'; ctx.fillText('🛡️', bx - 10, top - bh / 2); }
+        if (e.enraged) { ctx.fillStyle = '#000'; ctx.font = '16px serif'; ctx.fillText('😠', bx + bw + 11, top - bh / 2); }
+        top -= bh + 6;
+      }
+      // etiqueta: número del divisor o la multiplicación de sus pedacitos
+      if (e.label) {
+        ctx.font = `bold ${e.kind === 'mini' ? 13 : 16}px 'Comic Sans MS', sans-serif`;
+        const tw = ctx.measureText(e.label).width + 14, bh = e.kind === 'mini' ? 20 : 24;
+        const bx = Math.max(tw / 2 + 4, Math.min(pos.x, W - tw / 2 - 4));
+        ctx.fillStyle = e.kind === 'mini' ? '#f1e4ff' : '#fff3b0';
+        ctx.strokeStyle = '#7a3cc9'; ctx.lineWidth = 2;
+        roundRect(bx - tw / 2, top - bh, tw, bh, 8); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#4a3728';
+        ctx.fillText(e.label, bx, top - bh / 2 + 1);
       }
     }
     ctx.globalAlpha = 1;
   }
 
-  // frutas
+  // proyectiles
   ctx.fillStyle = '#000';
-  ctx.font = '26px serif';
+  ctx.font = '24px serif';
   for (const pr of game.projectiles) ctx.fillText(pr.emoji, pr.x, pr.y);
 
   // partículas
@@ -1672,6 +1938,9 @@ function roundRect(x, y, w2, h2, r) {
 /* ---- fin de nivel ---- */
 function endLevel(won) {
   game.running = false;
+  game.phase = 'done';
+  closePicker();
+  renderBuildBar();
   const p = profile();
   const card = document.getElementById('overlay-card');
   if (won) {

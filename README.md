@@ -8,22 +8,43 @@ El juego principal vive en `index.html`; lo acompañan `sw.js`, `manifest.webman
 
 ## Cómo se juega
 
-- Animalitos traviesos avanzan por el camino hacia el huerto 🏡, cada uno con una multiplicación sobre la cabeza.
-- El animalito **al frente** (burbuja amarilla) es el objetivo: escribe la respuesta con el teclado numérico y pulsa **✔ ¡Lanzar!**.
-- Respuesta correcta → el perrito guardián 🐶 le lanza una fruta y el animalito se va feliz 💖.
-- Respuesta **rápida** (menos de 3 segundos) → ¡bono de monedas ×2! ✨
-- Respuesta incorrecta → el animalito se apura un poquito. Tras 2 fallos, se muestra la respuesta como pista.
-- Si un animalito llega al huerto, pierdes una lechuga 🥬. Con 3 lechugas perdidas, se acaba el nivel.
+Es un *tower defense*: animalitos traviesos avanzan por el camino hacia el huerto 🏡 y tú decides cómo defenderlo.
+
+1. **Prepara tu defensa.** Antes de cada nivel, toca los círculos ➕ del mapa para colocar a tus defensores (3 por nivel al principio, hasta 5 en los mundos avanzados). Tocar un defensor lo quita. La formación se guarda para cuando repitas el nivel.
+2. **Carga energía contestando.** Abajo aparece una multiplicación: cada respuesta correcta da **1⚡**, y **2⚡ si contestas en menos de 3 segundos**. Tras 2 fallos se muestra la respuesta como pista.
+3. **Tus defensores disparan solos** al animalito más adelantado dentro de su alcance, y cada disparo gasta 1⚡. Sin energía no pueden disparar, así que ¡hay que seguir contestando!
+4. Si un animalito llega al huerto, pierdes una lechuga 🥬. Con 3 lechugas perdidas, se acaba el nivel.
+
+### Defensores
+
+| | Defensor | Poder |
+|---|---|---|
+| 🐶 | Toby | Lanza fruta, sencillo y fiel (gratis) |
+| 🐱 | Michi | Golpea a 2 animalitos con un solo disparo |
+| 🦉 | Sabia | Alcanza muy, muy lejos |
+| 🐨 | Kimi | Congela: los hace ir más lento |
+| 🦄 | Estrella | Arcoíris: golpea a todo el grupo |
+| 🐲 | Chispa | Fuego: doble daño |
+
+Se compran en la tienda, y cada uno se puede **mejorar dos veces** con monedas: primero más alcance, luego más daño.
+
+### Animalitos
+
+- **Normales**: un golpe.
+- 💨 **Rápidos**: corren el doble.
+- 🛡️ **Acorazados**: lentos, pero aguantan 3 golpes.
+- ✂️ **Divisores**: llevan un número (por ejemplo 12) y al vencerlos se parten en dos pedacitos con sus factores (3×4 y 2×6).
+- 👑 **Jefes**: al perder la mitad de su vida se enfurecen, se apuran y llaman refuerzos.
 
 ## Mundos y progresión
 
 - Cada mundo es una tabla: La Pradera 🐰 (tabla del 2), El Bosque 🦊 (del 3)… hasta La Granja 🐷 (del 10) y **El Gran Reto** 🐉 con todas mezcladas.
-- Cada mundo tiene 2 niveles + un **jefe** 👑 (hay que responder 5 multiplicaciones para vencerlo).
+- Cada mundo tiene 2 niveles + un **jefe** 👑. Los mundos avanzados traen animalitos más rápidos y más numerosos.
 - Se ganan hasta 3 estrellas por nivel según las lechugas que conserves. Vencer al jefe desbloquea el siguiente mundo.
 
 ## Tienda, logros y app instalable
 
-- **🛒 Tienda:** las monedas ganadas se gastan en defensores nuevos (🐱🦉🐨🦄🐲), sets de comida para lanzar (dulces, fiesta, magia) y mascotas de compañía que acompañan al defensor en el campo.
+- **🛒 Tienda:** las monedas ganadas se gastan en defensores nuevos (🐱🦉🐨🦄🐲) y sus mejoras, sets de comida para lanzar (dulces, fiesta, magia) y mascotas de compañía.
 - **🏅 Logros:** 10 insignias coleccionables (primera victoria, 5 respuestas rápidas en un nivel, nivel perfecto, vencer 3 jefes, dominar una tabla completa…). Se anuncian al terminar el nivel y se ven en la pantalla de Logros.
 - **📱 App instalable (PWA):** al abrir el juego desde el link, el navegador ofrece "Agregar a pantalla de inicio" (en Android/Chrome sale solo; en iPhone/iPad: botón compartir → "Agregar a pantalla de inicio"). Queda con su propio ícono y **funciona sin internet** gracias al service worker.
 
