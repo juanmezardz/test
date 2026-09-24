@@ -34,7 +34,7 @@ Se compran en la tienda, y cada uno se puede **mejorar dos veces** con monedas: 
 - **Normales**: un golpe.
 - 💨 **Rápidos**: corren el doble.
 - 🛡️ **Acorazados**: muy lentos, pero aguantan 3 golpes.
-- ✂️ **Divisores**: llevan un número (por ejemplo 12) y al vencerlos se parten en dos pedacitos con sus factores (3×4 y 2×6).
+- ✂️ **Divisores**: llegan con un número (por ejemplo ✂️12) y un **escudo morado** que los defensores no pueden romper. Cuando aparecen, la pregunta de abajo cambia a la suya, también en morado: `12 = 3 × ?`. Al contestarla se rompe el escudo y se parte en dos pedacitos que los defensores atacan normalmente. Si hay varios, se pregunta por el más adelantado y los demás esperan su turno con ⏳.
 - 👑 **Jefes**: al perder la mitad de su vida se enfurecen, se apuran y llaman refuerzos.
 
 ### Combos y poderes
