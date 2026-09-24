@@ -37,16 +37,32 @@ Se compran en la tienda, y cada uno se puede **mejorar dos veces** con monedas: 
 - ✂️ **Divisores**: llevan un número (por ejemplo 12) y al vencerlos se parten en dos pedacitos con sus factores (3×4 y 2×6).
 - 👑 **Jefes**: al perder la mitad de su vida se enfurecen, se apuran y llaman refuerzos.
 
+### Combos y poderes
+
+Cada respuesta correcta seguida llena una barra de 5 🔥. Al llenarla se carga un **poder especial**:
+
+- ❄️ **Congelar**: todos los animalitos se quedan quietos 5 segundos.
+- 🍎 **Lluvia de frutas**: caen frutas del cielo y golpean a todos los que están en el camino.
+
+Un fallo vacía la barra. Con 4 de 5 el recuadro parpadea y avisa "¡Una más y se carga!". Cada 5 seguidas también dan monedas extra.
+
 ## Mundos y progresión
 
 - Cada mundo es una tabla: La Pradera 🐰 (tabla del 2), El Bosque 🦊 (del 3)… hasta La Granja 🐷 (del 10) y **El Gran Reto** 🐉 con todas mezcladas.
 - Cada mundo tiene 2 niveles + un **jefe** 👑. Los mundos avanzados traen animalitos más rápidos y más numerosos.
 - Se ganan hasta 3 estrellas por nivel según las lechugas que conserves (5-4 → ⭐⭐⭐, 3-2 → ⭐⭐, 1 → ⭐). Vencer al jefe desbloquea el siguiente mundo.
 
+## Para volver cada día
+
+- **📅 Misión del día**: una misión nueva cada día y distinta para cada perfil. Puede ser vencer 30 animalitos en un mundo, contestar bien 25 de una tabla, 15 respuestas rápidas, un combo de 10 o hacer el repaso. Al cumplirla se reclama el premio en el mapa.
+- **🔥 Racha**: cumplir la misión varios días seguidos da más monedas (40 el primer día, hasta 80 con racha de 5 o más).
+- **🧠 Repaso del día**: un nivel especial que pregunta **solo las multiplicaciones que más le cuestan** a cada perfil (hasta 12), y las más falladas salen más seguido.
+- **📖 Historia**: el Dragón Glotón 🐉 hechizó a los animalitos. Cada mundo abre con un capítulo, y cada jefe vencido cuenta su final y entrega una Semilla Mágica 🌱. Con las 9 semillas se enfrenta al dragón en El Gran Reto.
+
 ## Tienda, logros y app instalable
 
 - **🛒 Tienda:** las monedas ganadas se gastan en defensores nuevos (🐱🦉🐨🦄🐲) y sus mejoras, sets de comida para lanzar (dulces, fiesta, magia) y mascotas de compañía.
-- **🏅 Logros:** 10 insignias coleccionables (primera victoria, 5 respuestas rápidas en un nivel, nivel perfecto, vencer 3 jefes, dominar una tabla completa…). Se anuncian al terminar el nivel y se ven en la pantalla de Logros.
+- **🏅 Logros:** 12 insignias coleccionables (primera victoria, 5 respuestas rápidas en un nivel, nivel perfecto, vencer 3 jefes, dominar una tabla completa, un combo de 10, 3 días seguidos de misión…). Se anuncian al terminar el nivel y se ven en la pantalla de Logros.
 - **📱 App instalable (PWA):** al abrir el juego desde el link, el navegador ofrece "Agregar a pantalla de inicio" (en Android/Chrome sale solo; en iPhone/iPad: botón compartir → "Agregar a pantalla de inicio"). Queda con su propio ícono y **funciona sin internet** gracias al service worker.
 
 ## Perfiles

@@ -154,7 +154,15 @@
   #canvas-wrap { position: relative; width: 100%; max-width: 900px; }
   canvas { width: 100%; display: block; border-radius: 18px; box-shadow: 0 6px 16px #0003; image-rendering: pixelated; }
 
-  #answer-area { width: 100%; max-width: 900px; margin-top: 8px; display: flex; gap: 10px; align-items: stretch; justify-content: center; flex-wrap: wrap; }
+  #answer-area {
+    width: 100%; max-width: 900px; margin-top: 8px; display: grid; gap: 8px 10px;
+    grid-template-columns: auto auto 1fr; align-items: stretch;
+  }
+  #answer-area #numpad { grid-column: 1 / -1; max-width: none; }
+  @media (max-width: 700px) {
+    #answer-area { grid-template-columns: 1fr 1fr; }
+    #answer-area #answer-display { grid-column: 1 / -1; }
+  }
   #answer-display {
     background: var(--panel); border: 4px solid var(--accent); border-radius: 16px;
     font-size: 2rem; font-weight: bold; min-width: 230px; padding: 4px 18px;
@@ -165,11 +173,45 @@
   #answer-display.shake { animation: shake .35s; border-color: var(--bad); }
   #energy {
     background: var(--panel); border: 4px solid #ffd24a; border-radius: 16px;
-    font-size: 1.7rem; padding: 4px 10px; display: flex; align-items: center; letter-spacing: -4px;
+    font-size: 1.4rem; padding: 4px 10px; display: flex; align-items: center; justify-content: center; letter-spacing: -4px;
   }
   #energy .off { opacity: .18; filter: grayscale(1); }
   #energy.empty { animation: blink .8s infinite; border-color: var(--bad); }
   @keyframes blink { 50% { transform: scale(1.07); } }
+
+  #powers {
+    background: var(--panel); border: 4px solid #ffb38a; border-radius: 16px; padding: 4px 10px; min-width: 150px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  }
+  #powers .combo-line { font-weight: bold; font-size: .85rem; white-space: nowrap; }
+  #powers .charge { font-size: 1.15rem; letter-spacing: -2px; }
+  #powers .charge .off { opacity: .18; filter: grayscale(1); }
+  #powers .power-btns { display: flex; gap: 6px; }
+  #powers .power-btns button {
+    font-size: 1.4rem; border: none; border-radius: 10px; background: #e9f6ff; padding: 2px 12px;
+    cursor: pointer; box-shadow: 0 3px 0 #b5d6ee;
+  }
+  #powers .power-btns button:disabled { opacity: .3; cursor: default; box-shadow: none; }
+  #powers.tense { animation: blink .6s infinite; border-color: #ff5a1f; }
+  #powers.ready { border-color: #ff5a1f; background: #fff1e0; }
+  #powers.ready .power-btns button { animation: glow .8s infinite alternate; }
+  @keyframes glow { from { box-shadow: 0 3px 0 #b5d6ee, 0 0 0 #ff8a3d00; } to { box-shadow: 0 3px 0 #b5d6ee, 0 0 14px #ff8a3d; } }
+  .story-text { max-width: 470px; margin: 10px auto; font-size: 1.05rem; line-height: 1.45; }
+
+  .daily-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; max-width: 900px; margin: 0 auto 18px; }
+  .daily-card {
+    background: var(--panel); border: 3px solid #ffd76e; border-radius: 18px; padding: 12px 14px;
+    box-shadow: 0 4px 10px #0001; display: flex; flex-direction: column; gap: 6px;
+  }
+  .daily-card.review { border-color: #9fd4ff; }
+  .daily-head { font-weight: bold; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .daily-head .streak { background: #ffe2c2; border-radius: 10px; padding: 2px 8px; font-size: .85rem; }
+  .daily-text { font-size: .95rem; }
+  .daily-action { display: flex; align-items: center; gap: 10px; margin-top: auto; }
+  .daily-bar { flex: 1; height: 12px; background: #eee4d0; border-radius: 6px; overflow: hidden; }
+  .daily-bar div { height: 100%; background: var(--good); border-radius: 6px; }
+  .daily-count { font-weight: bold; font-size: .9rem; }
+  .daily-done { font-weight: bold; color: var(--good); }
 
   #build-bar {
     position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 4;
@@ -195,14 +237,14 @@
   .pk-grid small { font-size: .78rem; opacity: .75; }
   .pk-tip { font-size: .85rem; opacity: .7; margin-bottom: 8px; }
   @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
-  #numpad { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; flex: 1; max-width: 460px; min-width: 280px; }
+  #numpad { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; flex: 1; max-width: 460px; min-width: 0; }
   #numpad button {
     font-family: inherit; font-size: 1.35rem; font-weight: bold; border: none; border-radius: 12px;
     background: var(--panel); color: var(--ink); padding: 10px 0; cursor: pointer;
     box-shadow: 0 3px 0 #cfc6b2;
   }
   #numpad button:active { transform: translateY(2px); box-shadow: 0 1px 0 #cfc6b2; }
-  #numpad button.ok { background: var(--good); color: #fff; box-shadow: 0 3px 0 #3d8c48; grid-column: span 2; }
+  #numpad button.ok { background: var(--good); color: #fff; box-shadow: 0 3px 0 #3d8c48; grid-column: span 3; }
   #numpad button.back { background: #f2d0a4; box-shadow: 0 3px 0 #c9a26a; }
 
   #overlay {
@@ -261,6 +303,7 @@
   </div>
   <h1>Mapa de Aventuras</h1>
   <p class="subtitle">Cada mundo es una tabla. ¡Gana estrellas para desbloquear el siguiente!</p>
+  <div class="daily-row" id="daily-row"></div>
   <div class="world-grid" id="world-grid"></div>
 </div>
 
@@ -315,6 +358,7 @@
   </div>
   <div id="answer-area">
     <div id="energy"></div>
+    <div id="powers"></div>
     <div id="answer-display">&nbsp;</div>
     <div id="numpad">
       <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
@@ -409,6 +453,10 @@ const BADGES = [
     check: (p) => p.coins >= 300 },
   { id: 'shopper',      emoji: '🛍️', name: 'Coleccionista',       desc: 'Compra 3 cosas en la tienda',
     check: (p) => ownedCount(p) >= 3 },
+  { id: 'combo10',      emoji: '🔥', name: 'Racha de fuego',      desc: 'Haz un combo de 10 sin fallar',
+    check: (p, run) => run && run.maxCombo >= 10 },
+  { id: 'daily3',       emoji: '📅', name: 'Constancia',          desc: 'Cumple la misión del día 3 días seguidos',
+    check: (p) => p.streak && p.streak.count >= 3 },
 ];
 function countBossWins(p) {
   let n = 0;
@@ -454,6 +502,7 @@ function ensureDefaults(p) {
   if (!p.badges) p.badges = {};
   if (!p.upgrades) p.upgrades = {};  // nivel de mejora de cada defensor
   if (!p.layouts) p.layouts = {};    // última formación usada en cada nivel
+  if (!p.story) p.story = {};        // capítulos de la historia ya vistos
 }
 function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
 function profile() { return db.profiles.find(p => p.id === db.currentId); }
@@ -477,8 +526,8 @@ function mastery(st) {
 let lastFactKey = null;
 function pickFact(table) {
   const p = profile();
-  const pool = [];
-  const tables = table === 0 ? [2,3,4,5,6,7,8,9,10] : [table];
+  const pool = table === REVIEW ? game.reviewPool.map(f => Object.assign({}, f)) : [];
+  const tables = table === REVIEW ? [] : table === 0 ? [2,3,4,5,6,7,8,9,10] : [table];
   for (const t of tables) {
     for (let n = 1; n <= 10; n++) {
       const st = p.facts[factKey(t, n)];
@@ -630,7 +679,9 @@ function islandSVG(w) {
 function enterMap() {
   const p = profile();
   if (!p) { show('screen-profiles'); renderProfiles(); return; }
-  document.getElementById('map-player').textContent = `${p.avatar} ${p.name} · 🪙 ${p.coins} · ⭐ ${totalStars(p)}`;
+  document.getElementById('map-player').textContent =
+    `${p.avatar} ${p.name} · 🪙 ${p.coins} · ⭐ ${totalStars(p)} · 🌱 ${seedCount(p)}/9`;
+  renderDaily();
   const grid = document.getElementById('world-grid');
   grid.innerHTML = '';
   WORLDS.forEach((w, wi) => {
@@ -849,6 +900,10 @@ const ENERGY_MAX = 6;
 const MAX_LIVES = 5; // niveles largos: más lechugas para equivocarse sin frustrarse
 
 function levelConfig(wi, li) {
+  if (wi === REVIEW) return { speed: 32, maxTowers: 4, boss: false, interval: 4200, waves: [
+    ['normal', 'normal', 'fast', 'normal', 'normal', 'fast', 'normal', 'normal'],
+    ['normal', 'fast', 'normal', 'armor', 'normal', 'fast', 'normal', 'normal', 'fast'],
+  ] };
   const speed = 30 + wi * 3.5 + li * 4; // px/seg
   const maxTowers = Math.min(5, 3 + Math.floor(wi / 3));
   const extra = wi >= 4 ? ['fast', 'armor'] : [];
@@ -881,13 +936,16 @@ const game = {
 };
 
 function startGame(wi, li) {
-  const w = WORLDS[wi];
+  const w = wi === REVIEW ? REVIEW_WORLD : WORLDS[wi];
   game.wi = wi; game.li = li; game.world = w;
+  if (wi === REVIEW) game.reviewPool = reviewFacts(profile());
   game.cfg = levelConfig(wi, li);
   game.enemies = []; game.projectiles = []; game.particles = [];
   game.wave = 0; game.waveBreak = 0;
   game.queue = game.cfg.waves[0].slice();
   game.spawnTimer = 1500; game.lives = MAX_LIVES; game.coins = 0; game.energy = 3;
+  game.combo = 0; game.maxCombo = 0; game.charge = 0; game.powerReady = false;
+  game.freezeT = 0; game.rainT = 0;
   game.input = ''; game.q = null; game.seenKinds = {};
   game.runFast = 0; game.runFails = 0; game.escaped = 0;
   game.phase = 'build';
@@ -921,14 +979,15 @@ function startGame(wi, li) {
   }
   document.getElementById('overlay').classList.remove('show');
   closePicker();
-  document.getElementById('hud-level').textContent =
+  document.getElementById('hud-level').textContent = wi === REVIEW ? `${w.deco} ${w.name}` :
     `${w.deco} ${w.name} · ${li === LEVELS_PER_WORLD - 1 ? '👑 Jefe' : 'Nivel ' + (li + 1)}`;
-  updateHud(); updateAnswerDisplay(); updateEnergy(); renderBuildBar();
+  updateHud(); updateAnswerDisplay(); updateEnergy(); renderPowers(); renderBuildBar();
   show('screen-game');
   game.running = true;
   game.lastTs = performance.now();
   requestAnimationFrame(loop);
-  if (!game.towers.length) toast('Toca un círculo ➕ del mapa para poner a un defensor');
+  if (wi !== REVIEW && li === 0 && !profile().story['i' + wi]) showStory(wi); // capítulo nuevo
+  else if (!game.towers.length) toast('Toca un círculo ➕ del mapa para poner a un defensor');
 }
 
 /* ---- fase de preparación: colocar defensores ---- */
@@ -991,6 +1050,7 @@ canvas.addEventListener('click', ev => {
 });
 function startWaves() {
   if (game.phase !== 'build' || !game.towers.length) return;
+  if (document.getElementById('overlay').classList.contains('show')) return; // leyendo la historia
   const p = profile();
   if (!p.layouts) p.layouts = {};
   p.layouts[`w${game.wi}-l${game.li}`] = game.towers.map(t => ({ slot: t.slot, id: t.id }));
@@ -1095,10 +1155,14 @@ function submitAnswer() {
     if (room < gain) game.coins++; // con la energía llena, lo que sobra se vuelve moneda
     fast ? sfx.crit() : sfx.ok();
     floatAt(W / 2, 460, fast ? `¡Rápido! +${gain}⚡` : `+${gain}⚡`, fast ? '#ff8a3d' : '#e0a800');
+    missionProgress('answers', 1, { a: q.a, b: q.b });
+    if (fast) missionProgress('fast');
+    comboHit();
     newQuestion();
   } else {
     st.fail++; st.streak = 0;
     q.fails++; game.runFails++;
+    comboBreak();
     sfx.bad();
     const disp = document.getElementById('answer-display');
     disp.classList.remove('shake'); void disp.offsetWidth; disp.classList.add('shake');
@@ -1144,6 +1208,7 @@ function hitEnemy(e, dmg) {
   }
   e.happy = true; e.happyT = 0;
   game.coins += e.coins;
+  missionProgress('kills', 1, { wi: game.wi });
   spawnParticles(e, e.kind === 'boss');
   if (e.kind === 'split') {
     const p1 = e.pairs[0], p2 = e.pairs[1] || e.pairs[0];
@@ -1188,6 +1253,11 @@ function update(dt) {
   }
   game.particles = game.particles.filter(pa => pa.life > 0);
   if (game.phase !== 'play') return;
+  if (game.freezeT > 0) game.freezeT -= dt;
+  if (game.rainT > 0) {
+    game.rainT -= dt;
+    if (game.rainT <= 0) for (const e of game.enemies.filter(e => !e.happy)) hitEnemy(e, 1);
+  }
 
   // fin de oleada: pausa corta, se recupera una lechuga y sale la siguiente
   const lastWave = game.wave >= game.cfg.waves.length - 1;
@@ -1232,7 +1302,8 @@ function update(dt) {
     if (e.happy) { e.happyT += dt; continue; }
     if (e.slowT > 0) e.slowT -= dt;
     if (e.hitT > 0) e.hitT -= dt;
-    e.dist += e.speed * (e.slowT > 0 ? 0.45 : 1) * dt;
+    if (e.frozenT > 0) e.frozenT -= dt;
+    e.dist += e.speed * (e.frozenT > 0 ? 0 : e.slowT > 0 ? 0.45 : 1) * dt;
     if (e.dist >= PATH_LEN) {
       e.happy = true; e.happyT = 10; // llegó al huerto: se retira sin corazones
       if (e.kind === 'boss') game.lives = 0; else { game.lives--; game.escaped++; }
@@ -1905,6 +1976,11 @@ function draw() {
         ctx.fillStyle = '#9fd4ff66';
         ctx.beginPath(); ctx.arc(pos.x, pos.y, e.size * 0.62, 0, Math.PI * 2); ctx.fill();
       }
+      if (e.frozenT > 0) {
+        ctx.fillStyle = '#d6f1ffdd'; ctx.strokeStyle = '#7cc6ee'; ctx.lineWidth = 2;
+        roundRect(pos.x - e.size * 0.58, pos.y - e.size * 0.6, e.size * 1.16, e.size * 1.16, 8);
+        ctx.fill(); ctx.stroke();
+      }
     }
     ctx.globalAlpha = e.happy ? Math.max(0, 1 - e.happyT) : 1;
     const wob = Math.sin(now / 180 + e.dist) * (e.happy ? 0 : 2);
@@ -1957,10 +2033,14 @@ function draw() {
       ctx.fillText(pa.text, pa.x, pa.y);
     } else {
       ctx.fillStyle = '#000';
-      ctx.font = '18px serif';
+      ctx.font = `${pa.size || 18}px serif`;
       ctx.fillText(pa.emoji, pa.x, pa.y);
     }
     ctx.globalAlpha = 1;
+  }
+  if (game.freezeT > 0) {
+    ctx.fillStyle = `rgba(191, 233, 255, ${Math.min(0.55, game.freezeT)})`;
+    ctx.fillRect(0, 0, W, H);
   }
 }
 function roundRect(x, y, w2, h2, r) {
@@ -1981,7 +2061,26 @@ function endLevel(won) {
   renderBuildBar();
   const p = profile();
   const card = document.getElementById('overlay-card');
-  if (won) {
+  const run = { fast: game.runFast, fails: game.runFails, maxCombo: game.maxCombo };
+  if (won && game.wi === REVIEW) {
+    const bonus = 15;
+    p.coins += game.coins + bonus;
+    missionProgress('review');
+    saveDB();
+    sfx.win();
+    const newBadges = checkBadges(Object.assign({ won: true, stars: 0 }, run));
+    const practiced = game.reviewPool.slice(0, 8).map(f => `${f.a}×${f.b}`).join(' · ');
+    card.innerHTML = `<div class="big-emoji">🧠✨</div>
+      <h2>¡Repaso completado!</h2>
+      <p>Practicaste: <b>${practiced}</b></p>
+      <p>Ganaste 🪙 ${game.coins} + ${bonus} de premio</p>
+      ${missionLine()}
+      ${newBadges.map(b => `<p>🏅 ¡Insignia nueva! ${b.emoji} <b>${b.name}</b></p>`).join('')}
+      <div class="actions">
+        <button class="btn blue" id="ov-map">🗺️ Mapa</button>
+        <button class="btn" id="ov-again">🔁 Otra vez</button>
+      </div>`;
+  } else if (won) {
     const stars = game.lives >= 4 ? 3 : game.lives >= 2 ? 2 : 1;
     const bonus = 10;
     p.coins += game.coins + bonus;
@@ -1989,7 +2088,13 @@ function endLevel(won) {
     p.stars[key] = Math.max(p.stars[key] || 0, stars);
     saveDB();
     sfx.win();
-    const newBadges = checkBadges({ won: true, stars, fast: game.runFast, fails: game.runFails });
+    const newBadges = checkBadges(Object.assign({ won: true, stars }, run));
+    let storyLine = '';
+    if (game.li === LEVELS_PER_WORLD - 1 && !p.story['o' + game.wi]) {
+      p.story['o' + game.wi] = true;
+      saveDB();
+      storyLine = `<p class="story-text">📖 ${STORY[game.wi].outro}</p>`;
+    }
     const badgeLines = newBadges.map(b =>
       `<p>🏅 ¡Insignia nueva! ${b.emoji} <b>${b.name}</b></p>`).join('');
     const starStr = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
@@ -1998,6 +2103,8 @@ function endLevel(won) {
       <h2>¡Nivel completado!</h2>
       <div class="stars-line">${starStr}</div>
       <p>Ganaste 🪙 ${game.coins} + ${bonus} de premio</p>
+      ${storyLine}
+      ${missionLine()}
       ${badgeLines}
       <div class="actions">
         <button class="btn blue" id="ov-map">🗺️ Mapa</button>
@@ -2013,11 +2120,12 @@ function endLevel(won) {
     });
   } else {
     saveDB(); // guarda las estadísticas de práctica aunque pierda
-    checkBadges({ won: false, fast: game.runFast, fails: game.runFails });
+    checkBadges(Object.assign({ won: false }, run));
     sfx.lose();
     card.innerHTML = `<div class="big-emoji">😅🥬</div>
       <h2>¡Oh no! Llegaron al huerto</h2>
       <p>No pasa nada, ¡inténtalo otra vez!</p>
+      ${missionLine()}
       <div class="actions">
         <button class="btn blue" id="ov-map">🗺️ Mapa</button>
         <button class="btn" id="ov-again">🔁 Otra vez</button>
@@ -2026,6 +2134,226 @@ function endLevel(won) {
   document.getElementById('ov-map').addEventListener('click', enterMap);
   document.getElementById('ov-again').addEventListener('click', () => startGame(game.wi, game.li));
   document.getElementById('overlay').classList.add('show');
+}
+
+/* ================== HISTORIA ENTRE MUNDOS ================== */
+const STORY = [
+  { intro: 'Las islas flotantes tenían huertos mágicos… hasta que el Dragón Glotón 🐉 lanzó un hechizo: ¡ahora los animalitos solo piensan en comerse las verduras! Dicen que las multiplicaciones rompen el hechizo. Tu aventura empieza en La Pradera.',
+    outro: 'La vaca 🐮 despertó del hechizo: «Muuu… ¿qué hacía yo en tu huerto?». Para darte las gracias te regaló la primera Semilla Mágica 🌱. ¡Faltan 8!' },
+  { intro: 'Siguiendo las huellas llegas a El Bosque 🍄. Los zorritos 🦊 se esconden entre los hongos… ¡y tienen mucha hambre! Su jefe es un oso enorme.',
+    outro: 'El oso 🐻 bostezó, se rascó la panza y volvió a su cueva a dormir. Te dejó la Semilla Mágica número 2 🌱.' },
+  { intro: 'Una isla rodeada de agua turquesa 🐚. Los delfines 🐬 saltan fuera del mar para morder tus zanahorias, y una ballena gigante los guía.',
+    outro: 'La ballena 🐳 lanzó un chorro de agua de pura alegría: ¡hechizo roto! Semilla Mágica número 3 🌱.' },
+  { intro: '¡Qué calor! En La Selva 🌴 los monos 🐵 se columpian directo a tu huerto. Algo muy grande se mueve entre las lianas…',
+    outro: 'El gorila 🦍 se golpeó el pecho… y te dio un abrazo. Semilla Mágica número 4 🌱. ¡Ya vas casi a la mitad!' },
+  { intro: 'En La Sabana 🌳 las cebras 🦓 corren en manada. Dicen que el león ruge tan fuerte que asusta a las nubes.',
+    outro: 'El león 🦁 dejó de rugir y ronroneó como un gatito. Semilla Mágica número 5 🌱.' },
+  { intro: '¡Brrr! En El Ártico ⛄ los pingüinos 🐧 se deslizan sobre el hielo directo al huerto. Un oso polar los vigila.',
+    outro: 'El oso polar 🐻‍❄️ te regaló la Semilla Mágica número 6 🌱, un poquito congelada.' },
+  { intro: 'Arena por todas partes 🌵. Las lagartijas 🦎 corren sin parar, y el camello lleva días sin comer… ¡quiere tus verduras!',
+    outro: 'El camello 🐫 estornudó… ¡y salió la Semilla Mágica número 7 🌱! Un poco asqueroso, pero sirve.' },
+  { intro: 'Subes hasta La Montaña 🏔️. Las cabras 🐐 saltan de roca en roca, y desde lo alto vigila un águila.',
+    outro: 'El águila 🦅 bajó del cielo y se posó a tu lado: Semilla Mágica número 8 🌱. ¡Solo falta una!' },
+  { intro: 'En La Granja 🌾 los cerditos 🐷 quieren todo el huerto para ellos, y un caballo muy veloz los dirige.',
+    outro: 'El caballo 🐴 relinchó feliz. ¡Ya tienes las 9 Semillas Mágicas! 🌱 Ahora puedes enfrentar al Dragón Glotón.' },
+  { intro: 'Con las 9 semillas llegas a la isla del Dragón Glotón 🐉. Aquí vienen animalitos de todos los mundos y con todas las tablas mezcladas. ¡Es el reto final!',
+    outro: 'El dragón 🐉 se sentó y soltó una lagrimita: «Solo quería comer con amigos…». Plantaste las 9 semillas y ahora todos comparten un huerto gigante. ¡Salvaste las islas! 🏆' },
+];
+function seedCount(p) {
+  let n = 0;
+  for (let w = 0; w < WORLDS.length - 1; w++) if (starsFor(p, w, LEVELS_PER_WORLD - 1) > 0) n++;
+  return n;
+}
+function showStory(wi) {
+  const card = document.getElementById('overlay-card');
+  card.innerHTML = `<div class="big-emoji">📖</div>
+    <h2>Capítulo ${wi + 1}: ${WORLDS[wi].name}</h2>
+    <p class="story-text">${STORY[wi].intro}</p>
+    <div class="actions"><button class="btn" id="ov-story">¡A defender! ▶</button></div>`;
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('build-bar').classList.remove('show');
+  document.getElementById('ov-story').addEventListener('click', () => {
+    profile().story['i' + wi] = true;
+    saveDB();
+    document.getElementById('overlay').classList.remove('show');
+    renderBuildBar();
+    if (!game.towers.length) toast('Toca un círculo ➕ del mapa para poner a un defensor');
+  });
+}
+
+/* ================== REPASO DEL DÍA ================== */
+const REVIEW = -1; // "mundo" especial: solo las multiplicaciones que más cuestan
+const REVIEW_WORLD = { table: REVIEW, name: 'Repaso del día', enemy: 'MIX', boss: '🐉', deco: '🧠',
+  sky: '#cfe8ff', ground: '#9ad0a8', groundDark: '#7aae88', flora: ['tree', 'tree', 'flower', 'bush', 'pine'] };
+function reviewFacts(p) {
+  const list = [];
+  for (const k in p.facts) {
+    const st = p.facts[k];
+    if (st.ok + st.fail === 0 || mastery(st) === 3) continue;
+    const [a, b] = k.split('x').map(Number);
+    list.push({ a, b, w: 1 + st.fail * 2 - Math.min(st.ok, 5) * 0.2 + (st.streak === 0 ? 1 : 0) });
+  }
+  return list.sort((x, y) => y.w - x.w).slice(0, 12);
+}
+function hasReview(p) { return reviewFacts(p).length >= 3; }
+
+/* ================== MISIÓN DEL DÍA ================== */
+const DAILY_REWARD = 40;
+function todayStr(d = new Date()) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function yesterdayStr() { const d = new Date(); d.setDate(d.getDate() - 1); return todayStr(d); }
+function hashStr(s) { let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; }
+function dailyMission() {
+  const p = profile(), today = todayStr();
+  if (p.daily && p.daily.date === today) return p.daily;
+  // la misión cambia cada día y es distinta para cada perfil
+  const r = makeRnd(hashStr(p.id + today));
+  const worlds = WORLDS.map((w, i) => i).filter(i => worldUnlocked(p, i));
+  const wi = worlds[Math.floor(r() * worlds.length)];
+  const w = WORLDS[wi];
+  const kinds = ['kills', 'answers', 'fast', 'combo'];
+  if (hasReview(p)) kinds.push('review');
+  const kind = kinds[Math.floor(r() * kinds.length)];
+  let m;
+  if (kind === 'kills') m = { kind, wi, target: 30, text: `Vence a 30 animalitos en ${w.name} ${w.enemy === 'MIX' ? '🐉' : w.enemy}` };
+  else if (kind === 'answers') {
+    const t = w.table || 2 + Math.floor(r() * 9);
+    m = { kind, table: t, target: 25, text: `Contesta bien 25 multiplicaciones de la tabla del ${t}` };
+  }
+  else if (kind === 'fast') m = { kind, target: 15, text: 'Contesta 15 veces en menos de 3 segundos ⚡' };
+  else if (kind === 'combo') m = { kind, target: 10, text: 'Haz un combo de 10 respuestas seguidas sin fallar 🔥' };
+  else m = { kind, target: 1, text: 'Completa el Repaso del día 🧠' };
+  p.daily = Object.assign(m, { date: today, progress: 0, done: false, claimed: false });
+  saveDB();
+  return m;
+}
+function missionProgress(kind, amount = 1, info = {}) {
+  const p = profile(), m = p && p.daily;
+  if (!m || m.date !== todayStr() || m.done || m.kind !== kind) return;
+  if (kind === 'kills' && info.wi !== m.wi) return;
+  if (kind === 'answers' && info.a !== m.table && info.b !== m.table) return;
+  if (kind === 'combo') m.progress = Math.max(m.progress, amount);
+  else m.progress += amount;
+  if (m.progress >= m.target) {
+    m.progress = m.target; m.done = true;
+    toast('📅 ¡Misión del día cumplida! Reclama tu premio en el mapa 🎁');
+    sfx.win();
+  }
+}
+function currentStreak(p) {
+  // la racha sigue viva si la última misión fue hoy o ayer
+  const s = p.streak;
+  return s && (s.last === todayStr() || s.last === yesterdayStr()) ? s.count : 0;
+}
+function dailyRewardFor(p) { return DAILY_REWARD + 10 * Math.min(currentStreak(p), 4); }
+function claimDaily() {
+  const p = profile(), m = p.daily;
+  if (!m || !m.done || m.claimed) return;
+  const reward = dailyRewardFor(p);
+  m.claimed = true;
+  p.coins += reward;
+  const s = p.streak || { last: null, count: 0 };
+  if (s.last !== todayStr()) s.count = s.last === yesterdayStr() ? s.count + 1 : 1;
+  s.last = todayStr();
+  p.streak = s;
+  saveDB();
+  initAudio(); sfx.win();
+  toast(`🎁 +${reward} monedas · 🔥 ${s.count} ${s.count === 1 ? 'día' : 'días'} seguidos`);
+  checkBadges(null);
+  enterMap();
+}
+function missionLine() {
+  const p = profile(), m = p.daily;
+  if (!m || m.date !== todayStr() || m.claimed) return '';
+  return m.done ? '<p>📅 ¡Misión del día cumplida! Reclama tu premio en el mapa 🎁</p>'
+                : `<p>📅 Misión de hoy: ${m.progress}/${m.target}</p>`;
+}
+function renderDaily() {
+  const p = profile(), m = dailyMission(), streak = currentStreak(p);
+  const rv = reviewFacts(p);
+  let action;
+  if (m.claimed) action = '<span class="daily-done">✅ ¡Cumplida! Mañana hay otra</span>';
+  else if (m.done) action = `<button class="btn small" id="btn-claim">🎁 Reclamar 🪙${dailyRewardFor(p)}</button>`;
+  else action = `<div class="daily-bar"><div style="width:${Math.round(100 * m.progress / m.target)}%"></div></div>
+    <span class="daily-count">${m.progress}/${m.target}</span>`;
+  document.getElementById('daily-row').innerHTML = `
+    <div class="daily-card">
+      <div class="daily-head">📅 Misión de hoy
+        ${streak ? `<span class="streak">🔥 ${streak} ${streak === 1 ? 'día' : 'días'} seguidos</span>` : ''}</div>
+      <div class="daily-text">${m.text}</div>
+      <div class="daily-action">${action}</div>
+    </div>
+    <div class="daily-card review">
+      <div class="daily-head">🧠 Repaso del día</div>
+      <div class="daily-text">${rv.length >= 3
+        ? `Practica las ${rv.length} multiplicaciones que más te cuestan: <b>${rv.slice(0, 4).map(f => f.a + '×' + f.b).join(', ')}${rv.length > 4 ? '…' : ''}</b>`
+        : '¡Aún no hay nada que repasar! Juega y aquí aparecerán las que más te cuesten.'}</div>
+      <div class="daily-action"><button class="btn small blue" id="btn-review" ${rv.length >= 3 ? '' : 'disabled'}>▶ Repasar</button></div>
+    </div>`;
+  const claim = document.getElementById('btn-claim');
+  if (claim) claim.addEventListener('click', claimDaily);
+  document.getElementById('btn-review').addEventListener('click', () => startGame(REVIEW, 0));
+}
+
+/* ================== COMBOS Y PODERES ================== */
+const POWER_CHARGE = 5; // respuestas seguidas para cargar un poder
+function renderPowers() {
+  const el = document.getElementById('powers');
+  const tense = !game.powerReady && game.charge === POWER_CHARGE - 1;
+  el.className = game.powerReady ? 'ready' : tense ? 'tense' : '';
+  const line = game.powerReady ? '¡Poder listo!' : tense ? '¡Una más y se carga!'
+    : game.combo >= 2 ? `Combo x${game.combo}` : 'Combo';
+  el.innerHTML = `<div class="combo-line">${line}</div>
+    <div class="charge">${'🔥'.repeat(game.charge)}<span class="off">${'🔥'.repeat(POWER_CHARGE - game.charge)}</span></div>
+    <div class="power-btns">
+      <button data-p="freeze" ${game.powerReady ? '' : 'disabled'} title="Congela a todos 5 segundos">❄️</button>
+      <button data-p="rain" ${game.powerReady ? '' : 'disabled'} title="Lluvia de frutas: golpea a todos">🍎</button>
+    </div>`;
+}
+document.getElementById('powers').addEventListener('click', ev => {
+  const b = ev.target.closest('button[data-p]');
+  if (b) usePower(b.dataset.p);
+});
+function comboHit() {
+  game.combo++;
+  game.maxCombo = Math.max(game.maxCombo, game.combo);
+  if (!game.powerReady && ++game.charge >= POWER_CHARGE) {
+    game.charge = POWER_CHARGE; game.powerReady = true;
+    toast('🔥 ¡Poder listo! Toca ❄️ para congelar o 🍎 para la lluvia de frutas');
+    playNotes([784, 988, 1175, 1568], 0.09);
+  }
+  if (game.combo >= 3) floatAt(W / 2, 425, `🔥 Combo x${game.combo}`, '#ff5a1f');
+  if (game.combo % 5 === 0) game.coins += 2;
+  missionProgress('combo', game.combo);
+  renderPowers();
+}
+function comboBreak() {
+  if (game.combo >= 3) floatAt(W / 2, 425, '💔 Se rompió el combo', '#c0392b');
+  game.combo = 0;
+  if (!game.powerReady) game.charge = 0;
+  renderPowers();
+}
+function usePower(kind) {
+  if (!game.running || game.phase !== 'play' || !game.powerReady) return;
+  initAudio();
+  game.powerReady = false; game.charge = 0;
+  if (kind === 'freeze') {
+    for (const e of game.enemies) if (!e.happy) e.frozenT = 5;
+    game.freezeT = 0.6;
+    toast('❄️ ¡Todos congelados!');
+    playNotes([1319, 1047, 1568], 0.12, 'triangle', 0.1);
+  } else {
+    const set = fruitSet();
+    for (let i = 0; i < 28; i++) {
+      game.particles.push({ x: 30 + Math.random() * 840, y: -20 - Math.random() * 180, vx: 0,
+        vy: 300 + Math.random() * 120, life: 2, emoji: set[i % set.length], size: 26 });
+    }
+    game.rainT = 0.6; // el golpe llega cuando las frutas caen
+    toast('🍎 ¡Lluvia de frutas!');
+    sfx.crit();
+  }
+  renderPowers();
 }
 
 /* ================== ARRANQUE ================== */
