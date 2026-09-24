@@ -13,7 +13,8 @@ Es un *tower defense*: animalitos traviesos avanzan por el camino hacia el huert
 1. **Prepara tu defensa.** Antes de cada nivel, toca los círculos ➕ del mapa para colocar a tus defensores (3 por nivel al principio, hasta 5 en los mundos avanzados). Tocar un defensor lo quita. La formación se guarda para cuando repitas el nivel.
 2. **Carga energía contestando.** Abajo aparece una multiplicación: cada respuesta correcta da **1⚡**, y **2⚡ si contestas en menos de 3 segundos**. Tras 2 fallos se muestra la respuesta como pista.
 3. **Tus defensores disparan solos** al animalito más adelantado dentro de su alcance, y cada disparo gasta 1⚡. Sin energía no pueden disparar, así que ¡hay que seguir contestando!
-4. Si un animalito llega al huerto, pierdes una lechuga 🥬. Con 3 lechugas perdidas, se acaba el nivel.
+4. Cada nivel tiene **3 oleadas**, cada una un poco más difícil. Al superar una oleada hay una pausa corta y recuperas una lechuga.
+5. Si un animalito llega al huerto, pierdes una lechuga 🥬. Tienes 5; si las pierdes todas, se acaba el nivel.
 
 ### Defensores
 
@@ -32,7 +33,7 @@ Se compran en la tienda, y cada uno se puede **mejorar dos veces** con monedas: 
 
 - **Normales**: un golpe.
 - 💨 **Rápidos**: corren el doble.
-- 🛡️ **Acorazados**: lentos, pero aguantan 3 golpes.
+- 🛡️ **Acorazados**: muy lentos, pero aguantan 3 golpes.
 - ✂️ **Divisores**: llevan un número (por ejemplo 12) y al vencerlos se parten en dos pedacitos con sus factores (3×4 y 2×6).
 - 👑 **Jefes**: al perder la mitad de su vida se enfurecen, se apuran y llaman refuerzos.
 
@@ -40,7 +41,7 @@ Se compran en la tienda, y cada uno se puede **mejorar dos veces** con monedas: 
 
 - Cada mundo es una tabla: La Pradera 🐰 (tabla del 2), El Bosque 🦊 (del 3)… hasta La Granja 🐷 (del 10) y **El Gran Reto** 🐉 con todas mezcladas.
 - Cada mundo tiene 2 niveles + un **jefe** 👑. Los mundos avanzados traen animalitos más rápidos y más numerosos.
-- Se ganan hasta 3 estrellas por nivel según las lechugas que conserves. Vencer al jefe desbloquea el siguiente mundo.
+- Se ganan hasta 3 estrellas por nivel según las lechugas que conserves (5-4 → ⭐⭐⭐, 3-2 → ⭐⭐, 1 → ⭐). Vencer al jefe desbloquea el siguiente mundo.
 
 ## Tienda, logros y app instalable
 
