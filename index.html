@@ -170,6 +170,8 @@
   }
   #answer-display .inp { color: var(--accent); min-width: 1.6em; text-align: left; }
   #answer-display .hint { font-size: 1.1rem; opacity: .55; }
+  #answer-display.div-q { border-color: #8e5bd6; background: #f6efff; }
+  #answer-display .dq-tag { font-size: 1.4rem; }
   #answer-display.shake { animation: shake .35s; border-color: var(--bad); }
   #energy {
     background: var(--panel); border: 4px solid #ffd24a; border-radius: 16px;
@@ -892,7 +894,7 @@ const ENEMY_TYPES = {
   normal: { hp: 1,  speed: 1,    size: 40, coins: 1 },
   fast:   { hp: 1,  speed: 1.75, size: 34, coins: 1, intro: '💨 ¡Animalito veloz! Corre el doble de rápido' },
   armor:  { hp: 3,  speed: 0.6,  size: 46, coins: 2, intro: '🛡️ ¡Acorazado! Necesita 3 golpes' },
-  split:  { hp: 1,  speed: 0.9,  size: 42, coins: 1, intro: '✂️ ¡Divisor! Al vencerlo se parte en dos' },
+  split:  { hp: 1,  speed: 0.9,  size: 42, coins: 2, intro: '✂️ ¡Divisor con escudo! Contesta su pregunta morada para romperlo' },
   mini:   { hp: 1,  speed: 1.25, size: 28, coins: 1 },
   boss:   { hp: 10, speed: 0.5,  size: 64, coins: 15 },
 };
@@ -1083,11 +1085,15 @@ function spawnEnemy(kind, dist = 0, label = null) {
     slowT: 0, hitT: 0, happy: false, happyT: 0,
   };
   if (kind === 'split') {
-    // un número con más de una forma de multiplicarse: al vencerlo se parte en sus factores
+    // trae un escudo que los defensores no pueden romper: solo se rompe contestando
+    // su propia pregunta de factor faltante ("12 = 3 × ?"), que aparece abajo en morado
     let f = pickFact(w.table);
     for (let i = 0; i < 6 && Math.min(f.a, f.b) < 2; i++) f = pickFact(w.table);
     e.n = f.a * f.b;
-    e.pairs = factorPairs(e.n);
+    const pairs = factorPairs(e.n);
+    const pair = pairs[Math.floor(Math.random() * pairs.length)];
+    [e.qa, e.qb] = Math.random() < 0.5 ? pair : [pair[1], pair[0]];
+    e.shielded = true;
     e.label = '✂️' + e.n;
   }
   game.enemies.push(e);
@@ -1103,17 +1109,44 @@ function factorPairs(n) {
 }
 
 /* ---- preguntas y energía ---- */
+function divisorTarget() {
+  // si hay divisores con escudo, se pregunta por el más adelantado
+  let best = null;
+  for (const e of game.enemies) if (e.shielded && !e.happy && (!best || e.dist > best.dist)) best = e;
+  return best;
+}
 function newQuestion() {
-  const f = pickFact(game.world.table);
-  game.q = { a: f.a, b: f.b, answer: f.a * f.b, since: performance.now(), fails: 0 };
+  const d = divisorTarget();
+  if (d) {
+    game.q = { a: d.qa, b: d.qb, answer: d.qb, n: d.n, div: d, since: performance.now(), fails: 0 };
+  } else {
+    const f = pickFact(game.world.table);
+    game.q = { a: f.a, b: f.b, answer: f.a * f.b, since: performance.now(), fails: 0 };
+  }
   game.input = '';
   updateAnswerDisplay();
+}
+function breakDivisor(e) {
+  e.shielded = false;
+  e.happy = true; e.happyT = 0;
+  game.coins += e.coins;
+  missionProgress('kills', 1, { wi: game.wi });
+  spawnParticles(e, true);
+  spawnEnemy('mini', e.dist);
+  spawnEnemy('mini', Math.max(0, e.dist - 24));
+  floatText(e, `💥 ¡${e.n} = ${e.qa} × ${e.qb}!`, '#7a3cc9');
+  playNotes([392, 523, 659, 784], 0.08, 'triangle');
+  updateHud();
 }
 function updateAnswerDisplay() {
   const d = document.getElementById('answer-display');
   if (!game.q) { d.innerHTML = game.phase === 'build' ? '🛡️ ¡Prepárate!' : '&nbsp;'; return; }
-  const hint = game.q.fails >= 2 ? `<span class="hint">(es ${game.q.answer})</span>` : '';
-  d.innerHTML = `<span>${game.q.a} × ${game.q.b} =</span><span class="inp">${game.input || '?'}</span>${hint}`;
+  const q = game.q;
+  const hint = q.fails >= 2 ? `<span class="hint">(es ${q.answer})</span>` : '';
+  d.classList.toggle('div-q', !!q.div);
+  d.innerHTML = q.div
+    ? `<span class="dq-tag">✂️${q.div.emoji}</span><span>${q.n} = ${q.a} ×</span><span class="inp">${game.input || '?'}</span>${hint}`
+    : `<span>${q.a} × ${q.b} =</span><span class="inp">${game.input || '?'}</span>${hint}`;
 }
 function updateEnergy() {
   const el = document.getElementById('energy');
@@ -1156,6 +1189,7 @@ function submitAnswer() {
     fast ? sfx.crit() : sfx.ok();
     floatAt(W / 2, 460, fast ? `¡Rápido! +${gain}⚡` : `+${gain}⚡`, fast ? '#ff8a3d' : '#e0a800');
     missionProgress('answers', 1, { a: q.a, b: q.b });
+    if (q.div && !q.div.happy) breakDivisor(q.div);
     if (fast) missionProgress('fast');
     comboHit();
     newQuestion();
@@ -1193,7 +1227,7 @@ function fireAt(t, e) {
   game.projectiles.push({ x: t.x, y: t.y - 20, target: e, dmg: s.dmg, kind: s.kind, emoji });
 }
 function hitEnemy(e, dmg) {
-  if (e.happy) return;
+  if (e.happy || e.shielded) return; // el escudo del divisor solo se rompe contestando
   e.hp -= dmg; e.hitT = 0.15;
   if (e.hp > 0) {
     if (e.kind === 'boss' && !e.enraged && e.hp <= e.hpMax / 2) {
@@ -1210,12 +1244,6 @@ function hitEnemy(e, dmg) {
   game.coins += e.coins;
   missionProgress('kills', 1, { wi: game.wi });
   spawnParticles(e, e.kind === 'boss');
-  if (e.kind === 'split') {
-    const p1 = e.pairs[0], p2 = e.pairs[1] || e.pairs[0];
-    spawnEnemy('mini', e.dist, `${p1[0]}×${p1[1]}`);
-    spawnEnemy('mini', Math.max(0, e.dist - 24), `${p2[0]}×${p2[1]}`);
-    floatText(e, `${e.n} = ${p1[0]}×${p1[1]}` + (e.pairs[1] ? ` = ${p2[0]}×${p2[1]}` : ''), '#7a3cc9');
-  }
   updateHud();
 }
 function spawnParticles(e, crit) {
@@ -1280,6 +1308,10 @@ function update(dt) {
     }
   }
 
+  // la pregunta de abajo sigue a los divisores
+  if (game.q && game.q.div && game.q.div.happy) newQuestion();               // se fue al huerto
+  else if (game.q && !game.q.div && game.input === '' && divisorTarget()) newQuestion(); // llegó uno
+
   // aparición de animalitos; el jefe espera a que el camino quede libre
   if (game.queue.length) {
     game.spawnTimer -= dt * 1000;
@@ -1320,7 +1352,7 @@ function update(dt) {
     if (t.fireT > 0) t.fireT -= dt;
     if (t.cd > 0 || game.energy < 1) continue;
     const inRange = game.enemies.filter(e => {
-      if (e.happy || e.hp - e.pending <= 0) return false;
+      if (e.happy || e.shielded || e.hp - e.pending <= 0) return false;
       const pos = pointAt(e.dist);
       return Math.hypot(pos.x - t.x, pos.y - t.y) <= t.s.range;
     }).sort((a, b) => b.dist - a.dist);
@@ -1976,6 +2008,13 @@ function draw() {
         ctx.fillStyle = '#9fd4ff66';
         ctx.beginPath(); ctx.arc(pos.x, pos.y, e.size * 0.62, 0, Math.PI * 2); ctx.fill();
       }
+      if (e.shielded) {
+        const asked = game.q && game.q.div === e;
+        ctx.fillStyle = asked ? '#b18cff55' : '#b18cff2e';
+        ctx.strokeStyle = asked ? '#7a3cc9' : '#b18cffaa';
+        ctx.lineWidth = asked ? 3 + Math.sin(now / 150) * 1.5 : 2;
+        ctx.beginPath(); ctx.arc(pos.x, pos.y, e.size * 0.72, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      }
       if (e.frozenT > 0) {
         ctx.fillStyle = '#d6f1ffdd'; ctx.strokeStyle = '#7cc6ee'; ctx.lineWidth = 2;
         roundRect(pos.x - e.size * 0.58, pos.y - e.size * 0.6, e.size * 1.16, e.size * 1.16, 8);
@@ -2004,16 +2043,18 @@ function draw() {
         if (e.enraged) { ctx.fillStyle = '#000'; ctx.font = '16px serif'; ctx.fillText('😠', bx + bw + 11, top - bh / 2); }
         top -= bh + 6;
       }
-      // etiqueta: número del divisor o la multiplicación de sus pedacitos
+      // número del divisor: morado fuerte si es la pregunta de abajo, tenue si espera su turno
       if (e.label) {
-        ctx.font = `bold ${e.kind === 'mini' ? 13 : 16}px 'Comic Sans MS', sans-serif`;
-        const tw = ctx.measureText(e.label).width + 14, bh = e.kind === 'mini' ? 20 : 24;
+        const asked = game.q && game.q.div === e;
+        const text = asked ? e.label : '⏳' + e.label;
+        ctx.font = `bold ${asked ? 17 : 14}px 'Comic Sans MS', sans-serif`;
+        const tw = ctx.measureText(text).width + 14, bh = asked ? 26 : 22;
         const bx = Math.max(tw / 2 + 4, Math.min(pos.x, W - tw / 2 - 4));
-        ctx.fillStyle = e.kind === 'mini' ? '#f1e4ff' : '#fff3b0';
+        ctx.fillStyle = asked ? '#8e5bd6' : '#f1e4ffcc';
         ctx.strokeStyle = '#7a3cc9'; ctx.lineWidth = 2;
         roundRect(bx - tw / 2, top - bh, tw, bh, 8); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#4a3728';
-        ctx.fillText(e.label, bx, top - bh / 2 + 1);
+        ctx.fillStyle = asked ? '#ffffff' : '#7a3cc9';
+        ctx.fillText(text, bx, top - bh / 2 + 1);
       }
     }
     ctx.globalAlpha = 1;
