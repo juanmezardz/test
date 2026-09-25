@@ -12,7 +12,7 @@ Es un *tower defense*: animalitos traviesos avanzan por el camino hacia el huert
 
 1. **Prepara tu defensa.** Antes de cada nivel, toca los círculos ➕ del mapa para colocar a tus defensores (3 por nivel al principio, hasta 5 en los mundos avanzados). Tocar un defensor lo quita. La formación se guarda para cuando repitas el nivel.
 2. **Carga energía contestando.** Abajo aparece una multiplicación: cada respuesta correcta da **1⚡**, y **2⚡ si contestas en menos de 3 segundos**. Tras 2 fallos se muestra la respuesta como pista.
-3. **Tus defensores disparan solos** al animalito más adelantado dentro de su alcance, y cada disparo gasta 1⚡. Sin energía no pueden disparar, así que ¡hay que seguir contestando!
+3. **Tus defensores disparan solos** al animalito más adelantado dentro de su alcance, y cada disparo gasta 1⚡. Sin energía no pueden disparar, así que ¡hay que seguir contestando! El alcance de cada defensor se ve como un círculo punteado que se ilumina al disparar; **tócalo durante la partida** para resaltarlo y ver su nombre y poder.
 4. Cada nivel tiene **3 oleadas**, cada una un poco más difícil. Al superar una oleada hay una pausa corta y recuperas una lechuga.
 5. Si un animalito llega al huerto, pierdes una lechuga 🥬. Tienes 5; si las pierdes todas, se acaba el nivel.
 
