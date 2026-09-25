@@ -858,6 +858,18 @@ function pointAt(dist) {
   }
   return PATH[PATH.length - 1];
 }
+// los emoji de cuerpo completo vienen dibujados mirando a la izquierda (Apple, Google, Microsoft);
+// se voltean en espejo cuando caminan a la derecha para que no parezca que van de reversa
+const FACES_LEFT = new Set(['🐬', '🦓', '🦎', '🐐', '🐳', '🦍', '🐫', '🦅', '🐴', '🐉']);
+function headingAt(dist) {
+  // +1 derecha, -1 izquierda; en los tramos que bajan se conserva la del último tramo horizontal
+  let dir = 1;
+  for (const s of SEGS) {
+    if (s.dx !== 0) dir = Math.sign(s.dx);
+    if (dist <= s.start + s.len) break;
+  }
+  return dir;
+}
 function distToPath(x, y) {
   let best = 1e9;
   for (const s of SEGS) {
@@ -1037,10 +1049,16 @@ function openPicker(slot) {
 }
 function closePicker() { document.getElementById('tower-picker').classList.remove('show'); }
 canvas.addEventListener('click', ev => {
-  if (!game.running || game.phase !== 'build') return;
+  if (!game.running) return;
   initAudio();
   const r = canvas.getBoundingClientRect();
   const x = (ev.clientX - r.left) * W / r.width, y = (ev.clientY - r.top) * H / r.height;
+  if (game.phase === 'play') {
+    const tw = game.towers.find(t => Math.hypot(t.x - x, t.y - y) < 38);
+    if (tw) game.inspect = { tw, t: 3 };
+    return;
+  }
+  if (game.phase !== 'build') return;
   const i = SLOTS.findIndex(s => Math.hypot(s.x - x, s.y - y) < 38);
   if (i < 0) return;
   if (game.towers.some(t => t.slot === i)) { removeTower(i); return; }
@@ -1280,6 +1298,7 @@ function update(dt) {
     pa.x += pa.vx * dt; pa.y += pa.vy * dt; pa.vy += 30 * dt; pa.life -= dt;
   }
   game.particles = game.particles.filter(pa => pa.life > 0);
+  if (game.inspect && (game.inspect.t -= dt) <= 0) game.inspect = null;
   if (game.phase !== 'play') return;
   if (game.freezeT > 0) game.freezeT -= dt;
   if (game.rainT > 0) {
@@ -1359,6 +1378,7 @@ function update(dt) {
     if (!inRange.length) continue;
     const targets = t.s.kind === 'double' ? inRange.slice(0, 2) : [inRange[0]];
     for (const e of targets) fireAt(t, e);
+    t.lastTargets = targets;
     game.energy--; t.cd = t.s.cd; t.fireT = 0.25;
     updateEnergy();
   }
@@ -1973,6 +1993,34 @@ function draw() {
     ctx.setLineDash([]);
   }
 
+  // durante la partida: alcance tenue siempre visible, se ilumina al disparar o al tocar el defensor
+  if (game.phase !== 'build') {
+    ctx.setLineDash([6, 8]);
+    for (const tw of game.towers) {
+      const flash = tw.fireT > 0 ? tw.fireT / 0.25 : 0;
+      const insp = game.inspect && game.inspect.tw === tw;
+      if (insp) {
+        ctx.fillStyle = '#ffffff33';
+        ctx.beginPath(); ctx.arc(tw.x, tw.y, tw.s.range, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.strokeStyle = `rgba(255, 255, 255, ${insp ? 0.95 : 0.3 + flash * 0.55})`;
+      ctx.lineWidth = insp ? 3 : 2;
+      ctx.beginPath(); ctx.arc(tw.x, tw.y, tw.s.range, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    // un rayito hacia cada objetivo del disparo (Michi dibuja dos)
+    ctx.lineCap = 'round';
+    for (const tw of game.towers) {
+      if (!(tw.fireT > 0) || !tw.lastTargets) continue;
+      ctx.strokeStyle = `rgba(255, 236, 120, ${tw.fireT / 0.25})`;
+      ctx.lineWidth = 4;
+      for (const e of tw.lastTargets) {
+        const p = pointAt(e.dist);
+        ctx.beginPath(); ctx.moveTo(tw.x, tw.y - 12); ctx.lineTo(p.x, p.y - 8); ctx.stroke();
+      }
+    }
+  }
+
   // defensores sobre su plataforma
   for (const tw of game.towers) {
     const hop = tw.fireT > 0 ? -7 : Math.sin(now / 320 + tw.slot) * 2;
@@ -1986,6 +2034,20 @@ function draw() {
     ctx.font = '40px serif';
     ctx.fillText(tw.s.emoji, tw.x, tw.y - 4 + hop);
     if (tw.s.lv > 1) { ctx.font = '11px serif'; ctx.fillText('⭐'.repeat(tw.s.lv - 1), tw.x, tw.y + 30); }
+  }
+  // ficha del defensor tocado: nombre y poder
+  if (game.inspect) {
+    const tw = game.inspect.tw;
+    const text = `${tw.s.emoji} ${tw.s.name} · ${tw.s.power}`;
+    ctx.globalAlpha = Math.min(1, game.inspect.t * 2);
+    ctx.font = "bold 14px 'Comic Sans MS', sans-serif";
+    const w2 = ctx.measureText(text).width + 18;
+    const bx = Math.max(w2 / 2 + 4, Math.min(tw.x, W - w2 / 2 - 4)), by = tw.y - 58;
+    ctx.fillStyle = '#fffdf5'; ctx.strokeStyle = '#ff8a3d'; ctx.lineWidth = 2;
+    roundRect(bx - w2 / 2, by - 13, w2, 26, 10); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#4a3728';
+    ctx.fillText(text, bx, by + 1);
+    ctx.globalAlpha = 1;
   }
   const pet = petEmoji();
   if (pet && game.towers.length) {
@@ -2024,9 +2086,14 @@ function draw() {
     ctx.globalAlpha = e.happy ? Math.max(0, 1 - e.happyT) : 1;
     const wob = Math.sin(now / 180 + e.dist) * (e.happy ? 0 : 2);
     ctx.fillStyle = '#000'; // los emoji heredan el alfa del fillStyle: opaco siempre
-    if (e.kind === 'fast' && !e.happy) { ctx.font = '18px serif'; ctx.fillText('💨', pos.x - e.size * 0.7, y + 4); }
+    const dir = headingAt(e.dist);
+    const mirrored = (text, x, yy, flip) => {
+      if (!flip) { ctx.fillText(text, x, yy); return; }
+      ctx.save(); ctx.translate(x, yy); ctx.scale(-1, 1); ctx.fillText(text, 0, 0); ctx.restore();
+    };
+    if (e.kind === 'fast' && !e.happy) { ctx.font = '18px serif'; mirrored('💨', pos.x - dir * e.size * 0.7, y + 4, dir < 0); }
     ctx.font = `${size}px serif`;
-    ctx.fillText(e.emoji, pos.x, y + wob);
+    mirrored(e.emoji, pos.x, y + wob, dir > 0 && FACES_LEFT.has(e.emoji));
     if (e.happy && e.happyT < 5) { ctx.font = '20px serif'; ctx.fillText('💖', pos.x + 20, y - 24); }
 
     if (!e.happy) {
